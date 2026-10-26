@@ -243,7 +243,7 @@ renderer.domElement.addEventListener("pointermove", (event) => {
     const dx = event.clientX - lastLookX;
     const dy = event.clientY - lastLookY;
 
-    yaw -= dx * 0.005;
+    yaw += dx * 0.005;
     pitch -= dy * 0.005;
 
     pitch = THREE.MathUtils.clamp(
@@ -274,21 +274,24 @@ function animate(time = 0) {
     const delta = Math.min((time - previousTime) / 1000, 0.05);
     previousTime = time;
 
-    // Arah depan dan samping berdasarkan kamera.
-    const forward = -joystickY;
-    const sideways = joystickX;
+    // Arah depan dan samping berdasarkan kamera.  
+const forward = -joystickY;
+const sideways = joystickX;
 
-    const speed = player.speed * (running ? 1.8 : 1);
+const speed = player.speed * (running ? 1.8 : 1);
 
-    player.x += (
-        Math.sin(yaw) * forward +
-        Math.cos(yaw) * sideways
-    ) * speed * delta;
+// Hitung arah gerakan berdasarkan kamera
+const moveX =
+    Math.sin(yaw) * forward +
+    Math.cos(yaw) * sideways;
 
-    player.z += (
-        -Math.cos(yaw) * forward +
-        Math.sin(yaw) * sideways
-    ) * speed * delta;
+const moveZ =
+    -Math.cos(yaw) * forward +
+    Math.sin(yaw) * sideways;
+
+// Gerakkan karakter
+player.x += moveX * speed * delta;
+player.z += moveZ * speed * delta;
 
     // Batas area permainan.
     player.x = THREE.MathUtils.clamp(player.x, -40, 40);
