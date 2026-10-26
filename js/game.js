@@ -389,3 +389,50 @@ window.addEventListener("resize", () => {
 });
 
 animate();
+
+/* ===== MINIMAP SEMENTARA ===== */
+const minimap = document.getElementById("minimap");
+
+if (minimap) {
+    const ctx = minimap.getContext("2d");
+
+    function drawMinimap() {
+        const w = minimap.width;
+        const h = minimap.height;
+
+        ctx.fillStyle = "#172a35";
+        ctx.fillRect(0, 0, w, h);
+
+        // Gambar jalan utama
+        ctx.strokeStyle = "#cbd5e1";
+        ctx.lineWidth = 5;
+
+        ctx.beginPath();
+        ctx.moveTo(w / 2, 0);
+        ctx.lineTo(w / 2, h);
+        ctx.stroke();
+
+        // Gambar jalan-jalan silang
+        ctx.strokeStyle = "#94a3b8";
+        ctx.lineWidth = 3;
+
+        for (let y = 35; y < h; y += 55) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+        }
+
+        // Penanda posisi pemain
+        ctx.beginPath();
+        ctx.arc(w / 2, h / 2, 7, 0, Math.PI * 2);
+        ctx.fillStyle = "#38bdf8";
+        ctx.fill();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    drawMinimap();
+}
+
