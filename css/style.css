@@ -194,3 +194,28 @@ canvas:not(#minimap) {
         width: 130px;
     }
 }
+
+/* PERBAIKAN LAYAR GAME */
+body > canvas:not(#minimap) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    display: block;
+    z-index: 0;
+}
+
+/* Pastikan antarmuka game berada di atas canvas */
+#hud,
+#joystick,
+#run-button,
+#crosshair,
+#minimap-container {
+    position: fixed;
+    z-index: 5;
+}
+
+#minimap-container {
+    z-index: 20;
+}
