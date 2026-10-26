@@ -265,7 +265,8 @@ function stopLooking(event) {
 renderer.domElement.addEventListener("pointerup", stopLooking);
 renderer.domElement.addEventListener("pointercancel", stopLooking);
 
-// ===== ANIMASI GAME =====
+
+/* ===== ANIMASI GAME ===== */
 let previousTime = 0;
 
 function animate(time = 0) {
@@ -274,47 +275,60 @@ function animate(time = 0) {
     const delta = Math.min((time - previousTime) / 1000, 0.05);
     previousTime = time;
 
-    // Arah depan dan samping berdasarkan kamera.  
-const forward = -joystickY;
-const sideways = joystickX;
+    // Arah gerakan berdasarkan kamera
+    const forward = -joystickY;
+    const sideways = joystickX;
 
-const speed = player.speed * (running ? 1.8 : 1);
+    const speed = player.speed * (running ? 1.8 : 1);
 
-// Hitung arah gerakan berdasarkan kamera
-const moveX =
-    Math.sin(yaw) * forward +
-    Math.cos(yaw) * sideways;
+    const moveX =
+        Math.sin(yaw) * forward +
+        Math.cos(yaw) * sideways;
 
-const moveZ =
-    -Math.cos(yaw) * forward +
-    Math.sin(yaw) * sideways;
+    const moveZ =
+        -Math.cos(yaw) * forward +
+        Math.sin(yaw) * sideways;
 
-// Gerakkan karakter
-player.x += moveX * speed * delta;
-player.z += moveZ * speed * delta;
+    // Gerakkan pemain
+    player.x += moveX * speed * delta;
+    player.z += moveZ * speed * delta;
 
-    // Batas area permainan.
+    // Batasi area permainan
     player.x = THREE.MathUtils.clamp(player.x, -40, 40);
     player.z = THREE.MathUtils.clamp(player.z, -90, 90);
 
-/* Kamera mengikuti dari belakang karakter */
-const cameraDistance = 7;
-const cameraHeight = 3.5;
+    // Pindahkan model karakter mengikuti pemain
+    character.position.set(player.x, 0, player.z);
 
-const targetX = player.x - Math.sin(yaw) * cameraDistance;
-const targetZ = player.z + Math.cos(yaw) * cameraDistance;
+    // Putar karakter ke arah gerakan
+    if (Math.abs(moveX) + Math.abs(moveZ) > 0.01) {
+        character.rotation.y = Math.atan2(moveX, moveZ);
+    }
 
-camera.position.set(
-    targetX,
-    cameraHeight,
-    targetZ
-);
+    // Kamera orang ketiga
+    const cameraDistance = 7;
+    const cameraHeight = 3.5;
 
-camera.lookAt(
-    player.x,
-    1.3,
-    player.z
-);
+    const targetX =
+        player.x - Math.sin(yaw) * cameraDistance;
+
+    const targetZ =
+        player.z + Math.cos(yaw) * cameraDistance;
+
+    // Haluskan pergerakan kamera
+    const smoothness = 1 - Math.exp(-6 * delta);
+
+    camera.position.x +=
+        (targetX - camera.position.x) * smoothness;
+
+    camera.position.y +=
+        (cameraHeight - camera.position.y) * smoothness;
+
+    camera.position.z +=
+        (targetZ - camera.position.z) * smoothness;
+
+    // Kamera melihat ke arah karakter
+    camera.lookAt(player.x, 1.3, player.z);
 
     renderer.render(scene, camera);
 }
