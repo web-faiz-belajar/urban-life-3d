@@ -3,19 +3,26 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="theme-color" content="#020617">
-
     <title>Urban Life 3D</title>
-
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="game">
-        <h1>Urban Life 3D</h1>
-        <p>Dunia baru menantimu.</p>
-        <button id="start-button">Mulai Bermain</button>
+    <div id="hud">
+        <div id="game-title">URBAN LIFE <span>3D</span></div>
+        <div id="money">$ 500</div>
+        <div id="hint">Jelajahi kota</div>
     </div>
+
+    <div id="joystick">
+        <div id="stick"></div>
+    </div>
+
+    <button id="run-button">LARI</button>
+
+    <div id="crosshair">+</div>
 
     <script type="module" src="js/game.js"></script>
 </body>
