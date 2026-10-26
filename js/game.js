@@ -390,7 +390,17 @@ window.addEventListener("resize", () => {
 
 animate();
 
+/* ===== MEMUAT JALAN BANDUNG ===== */
+let bandungRoads = [];
 
+loadBandungMap()
+    .then((roads) => {
+        bandungRoads = roads;
+        console.log("Jalan Bandung dimuat:", bandungRoads.length);
+    })
+    .catch((error) => {
+        console.error("Gagal memuat jalan Bandung:", error);
+    });
 
 /* ===== MINIMAP BERGERAK ===== */
 const minimap = document.getElementById("minimap");
