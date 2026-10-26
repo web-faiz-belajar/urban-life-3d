@@ -390,7 +390,8 @@ window.addEventListener("resize", () => {
 
 animate();
 
-/* ===== MINIMAP SEMENTARA ===== */
+
+/* ===== MINIMAP BERGERAK ===== */
 const minimap = document.getElementById("minimap");
 
 if (minimap) {
@@ -400,32 +401,46 @@ if (minimap) {
         const w = minimap.width;
         const h = minimap.height;
 
+        // Latar minimap
         ctx.fillStyle = "#172a35";
         ctx.fillRect(0, 0, w, h);
 
-        // Gambar jalan utama
+        // Ukuran area dunia yang terlihat
+        const scale = 3;
+        const centerX = w / 2;
+        const centerY = h / 2;
+
+        // Posisi pemain dari dunia 3D
+        const px = player.x;
+        const pz = player.z;
+
+        // Gambar jalan utama relatif terhadap pemain
         ctx.strokeStyle = "#cbd5e1";
         ctx.lineWidth = 5;
 
         ctx.beginPath();
-        ctx.moveTo(w / 2, 0);
-        ctx.lineTo(w / 2, h);
+        ctx.moveTo(centerX - px * scale, 0);
+        ctx.lineTo(centerX - px * scale, h);
         ctx.stroke();
 
-        // Gambar jalan-jalan silang
+        // Gambar jalan silang yang ikut bergeser
         ctx.strokeStyle = "#94a3b8";
         ctx.lineWidth = 3;
 
-        for (let y = 35; y < h; y += 55) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(w, y);
-            ctx.stroke();
+        for (let z = -200; z <= 200; z += 35) {
+            const y = centerY + (z - pz) * scale;
+
+            if (y >= 0 && y <= h) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
         }
 
-        // Penanda posisi pemain
+        // Penanda pemain tetap di tengah minimap
         ctx.beginPath();
-        ctx.arc(w / 2, h / 2, 7, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, 7, 0, Math.PI * 2);
         ctx.fillStyle = "#38bdf8";
         ctx.fill();
         ctx.strokeStyle = "#ffffff";
@@ -433,6 +448,11 @@ if (minimap) {
         ctx.stroke();
     }
 
-    drawMinimap();
-}
+    // Gambar minimap berulang kali
+    function updateMinimap() {
+        drawMinimap();
+        requestAnimationFrame(updateMinimap);
+    }
 
+    updateMinimap();
+}
