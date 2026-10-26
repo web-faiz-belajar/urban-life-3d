@@ -1,9 +1,10 @@
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
+// ===== PENGATURAN DASAR =====
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
-scene.fog = new THREE.Fog(0x87ceeb, 20, 100);
+scene.fog = new THREE.Fog(0x87ceeb, 25, 120);
 
 const camera = new THREE.PerspectiveCamera(
     75,
@@ -12,56 +13,56 @@ const camera = new THREE.PerspectiveCamera(
     200
 );
 
-camera.position.set(0, 2, 8);
-
 const renderer = new THREE.WebGLRenderer({
     antialias: true
 });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-document.body.innerHTML = "";
-document.body.style.margin = "0";
-document.body.style.overflow = "hidden";
 document.body.appendChild(renderer.domElement);
 
-// Cahaya
-scene.add(new THREE.HemisphereLight(0xffffff, 0x536078, 2));
+// ===== PENCAHAYAAN =====
+scene.add(new THREE.HemisphereLight(0xffffff, 0x52634b, 2));
 
-const sunlight = new THREE.DirectionalLight(0xffffff, 2);
-sunlight.position.set(10, 20, 10);
-scene.add(sunlight);
+const sun = new THREE.DirectionalLight(0xffffff, 2);
+sun.position.set(20, 30, 10);
+scene.add(sun);
 
-// Tanah
+// ===== TANAH =====
 const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(200, 200),
     new THREE.MeshStandardMaterial({ color: 0x477c42 })
 );
+
 ground.rotation.x = -Math.PI / 2;
 ground.position.y = -0.1;
 scene.add(ground);
 
-// Jalan kota
+// ===== JALAN =====
 const road = new THREE.Mesh(
     new THREE.PlaneGeometry(12, 200),
     new THREE.MeshStandardMaterial({ color: 0x343943 })
 );
+
 road.rotation.x = -Math.PI / 2;
-road.position.y = -0.05;
+road.position.y = -0.04;
 scene.add(road);
 
-// Garis tengah jalan
-for (let z = -90; z <= 90; z += 10) {
+// Garis jalan
+for (let z = -90; z <= 90; z += 8) {
     const line = new THREE.Mesh(
-        new THREE.BoxGeometry(0.15, 0.03, 4),
+        new THREE.BoxGeometry(0.15, 0.025, 3),
         new THREE.MeshStandardMaterial({ color: 0xffffff })
     );
-    line.position.set(0, 0.02, z);
+
+    line.position.set(0, 0.01, z);
     scene.add(line);
 }
 
-// Membuat gedung sederhana
+// ===== BANGUNAN =====
 function createBuilding(x, z, width, height, color) {
     const building = new THREE.Mesh(
         new THREE.BoxGeometry(width, height, width),
@@ -72,47 +73,186 @@ function createBuilding(x, z, width, height, color) {
     scene.add(building);
 }
 
-for (let z = -40; z <= 40; z += 15) {
-    createBuilding(-12, z, 7, 5 + Math.random() * 10, 0xd6d3d1);
-    createBuilding(12, z, 7, 5 + Math.random() * 10, 0xc4b5a5);
+for (let z = -50; z <= 50; z += 12) {
+    createBuilding(-12, z, 7, 5 + Math.random() * 8, 0xd6d3d1);
+    createBuilding(12, z, 7, 5 + Math.random() * 8, 0xc4b5a5);
 }
 
-// Pemain sederhana
-const player = new THREE.Group();
+// ===== PEMAIN =====
+// Pemain tidak digambar karena kamera berada pada sudut pandang orang pertama.
+const player = {
+    x: 0,
+    z: 5,
+    speed: 5
+};
 
-const body = new THREE.Mesh(
-    new THREE.BoxGeometry(0.7, 1.4, 0.4),
-    new THREE.MeshStandardMaterial({ color: 0x2563eb })
-);
-body.position.y = 0.8;
-player.add(body);
-scene.add(player);
+let yaw = 0;
+let pitch = 0;
+let joystickX = 0;
+let joystickY = 0;
+let running = false;
 
-camera.position.set(0, 3, 7);
-camera.lookAt(player.position);
+// Posisi awal kamera
+camera.position.set(player.x, 1.7, player.z);
+camera.rotation.order = "YXZ";
 
-// Kontrol gerakan sederhana dengan keyboard
-const keys = {};
+// ===== JOYSTICK =====
+const joystick = document.getElementById("joystick");
+const stick = document.getElementById("stick");
 
-window.addEventListener("keydown", e => {
-    keys[e.key.toLowerCase()] = true;
+let joystickPointer = null;
+
+joystick.addEventListener("pointerdown", (event) => {
+    joystickPointer = event.pointerId;
+    joystick.setPointerCapture(event.pointerId);
+    moveJoystick(event);
 });
 
-window.addEventListener("keyup", e => {
-    keys[e.key.toLowerCase()] = false;
+joystick.addEventListener("pointermove", (event) => {
+    if (event.pointerId === joystickPointer) {
+        moveJoystick(event);
+    }
 });
 
-function animate() {
+function moveJoystick(event) {
+    const rect = joystick.getBoundingClientRect();
+
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    let dx = event.clientX - centerX;
+    let dy = event.clientY - centerY;
+
+    const maxDistance = rect.width * 0.32;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance > maxDistance) {
+        dx = dx / distance * maxDistance;
+        dy = dy / distance * maxDistance;
+    }
+
+    joystickX = dx / maxDistance;
+    joystickY = dy / maxDistance;
+
+    stick.style.left = `calc(50% + ${dx}px)`;
+    stick.style.top = `calc(50% + ${dy}px)`;
+}
+
+function resetJoystick(event) {
+    if (
+        joystickPointer !== null &&
+        event.pointerId === joystickPointer
+    ) {
+        joystickPointer = null;
+        joystickX = 0;
+        joystickY = 0;
+
+        stick.style.left = "50%";
+        stick.style.top = "50%";
+    }
+}
+
+joystick.addEventListener("pointerup", resetJoystick);
+joystick.addEventListener("pointercancel", resetJoystick);
+joystick.addEventListener("lostpointercapture", () => {
+    joystickPointer = null;
+    joystickX = 0;
+    joystickY = 0;
+    stick.style.left = "50%";
+    stick.style.top = "50%";
+});
+
+// ===== TOMBOL LARI =====
+const runButton = document.getElementById("run-button");
+
+runButton.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    running = true;
+});
+
+function stopRunning() {
+    running = false;
+}
+
+runButton.addEventListener("pointerup", stopRunning);
+runButton.addEventListener("pointercancel", stopRunning);
+runButton.addEventListener("lostpointercapture", stopRunning);
+
+// ===== GERAKAN KAMERA =====
+// Geser jari pada sisi kanan layar untuk melihat sekeliling.
+let lookPointer = null;
+let lastLookX = 0;
+let lastLookY = 0;
+
+renderer.domElement.addEventListener("pointerdown", (event) => {
+    if (event.clientX < window.innerWidth * 0.4) return;
+
+    lookPointer = event.pointerId;
+    lastLookX = event.clientX;
+    lastLookY = event.clientY;
+
+    renderer.domElement.setPointerCapture(event.pointerId);
+});
+
+renderer.domElement.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== lookPointer) return;
+
+    const dx = event.clientX - lastLookX;
+    const dy = event.clientY - lastLookY;
+
+    yaw -= dx * 0.005;
+    pitch -= dy * 0.005;
+
+    pitch = THREE.MathUtils.clamp(
+        pitch,
+        -Math.PI / 2.5,
+        Math.PI / 2.5
+    );
+
+    lastLookX = event.clientX;
+    lastLookY = event.clientY;
+});
+
+function stopLooking(event) {
+    if (event.pointerId === lookPointer) {
+        lookPointer = null;
+    }
+}
+
+renderer.domElement.addEventListener("pointerup", stopLooking);
+renderer.domElement.addEventListener("pointercancel", stopLooking);
+
+// ===== ANIMASI GAME =====
+let previousTime = 0;
+
+function animate(time = 0) {
     requestAnimationFrame(animate);
 
-    if (keys["w"] || keys["arrowup"]) player.position.z -= 0.1;
-    if (keys["s"] || keys["arrowdown"]) player.position.z += 0.1;
-    if (keys["a"] || keys["arrowleft"]) player.position.x -= 0.1;
-    if (keys["d"] || keys["arrowright"]) player.position.x += 0.1;
+    const delta = Math.min((time - previousTime) / 1000, 0.05);
+    previousTime = time;
 
-    camera.position.x = player.position.x;
-    camera.position.z = player.position.z + 7;
-    camera.lookAt(player.position.x, player.position.y, player.position.z);
+    // Arah depan dan samping berdasarkan kamera.
+    const forward = -joystickY;
+    const sideways = joystickX;
+
+    const speed = player.speed * (running ? 1.8 : 1);
+
+    player.x += (
+        Math.sin(yaw) * forward +
+        Math.cos(yaw) * sideways
+    ) * speed * delta;
+
+    player.z += (
+        -Math.cos(yaw) * forward +
+        Math.sin(yaw) * sideways
+    ) * speed * delta;
+
+    // Batas area permainan.
+    player.x = THREE.MathUtils.clamp(player.x, -40, 40);
+    player.z = THREE.MathUtils.clamp(player.z, -90, 90);
+
+    camera.position.set(player.x, 1.7, player.z);
+    camera.rotation.set(pitch, yaw, 0, "YXZ");
 
     renderer.render(scene, camera);
 }
@@ -120,6 +260,7 @@ function animate() {
 window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
+
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
