@@ -438,15 +438,25 @@ if (minimap) {
             }
         }
 
-        // Penanda pemain tetap di tengah minimap
+        // Putar minimap sesuai arah hadap karakter
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(-character.rotation.y);
+
+        // Penanda arah pemain berbentuk segitiga
         ctx.beginPath();
-        ctx.arc(centerX, centerY, 7, 0, Math.PI * 2);
+        ctx.moveTo(0, -12);
+        ctx.lineTo(-7, 7);
+        ctx.lineTo(7, 7);
+        ctx.closePath();
+
         ctx.fillStyle = "#38bdf8";
         ctx.fill();
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 2;
         ctx.stroke();
-    }
+
+        ctx.restore();
 
     // Gambar minimap berulang kali
     function updateMinimap() {
