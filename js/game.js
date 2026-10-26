@@ -73,11 +73,59 @@ function createBuilding(x, z, width, height, color) {
     scene.add(building);
 }
 
-for (let z = -50; z <= 50; z += 12) {
-    createBuilding(-12, z, 7, 5 + Math.random() * 8, 0xd6d3d1);
-    createBuilding(12, z, 7, 5 + Math.random() * 8, 0xc4b5a5);
+/* ===== KOTA YANG LEBIH LUAS ===== */
+
+// Blok bangunan di sepanjang jalan utama
+for (let z = -85; z <= 85; z += 14) {
+    createBuilding(
+        -15,
+        z,
+        8,
+        6 + Math.random() * 12,
+        0xd6d3d1
+    );
+
+    createBuilding(
+        15,
+        z,
+        8,
+        6 + Math.random() * 12,
+        0xc4b5a5
+    );
 }
 
+// Jalan silang
+function createCrossRoad(x, z, width, length) {
+    const road = new THREE.Mesh(
+        new THREE.PlaneGeometry(width, length),
+        new THREE.MeshStandardMaterial({
+            color: 0x343943
+        })
+    );
+
+    road.rotation.x = -Math.PI / 2;
+    road.position.set(x, -0.035, z);
+    scene.add(road);
+}
+
+// Jalan melintang di beberapa lokasi
+for (let z = -70; z <= 70; z += 35) {
+    createCrossRoad(0, z, 100, 10);
+}
+
+// Trotoar di kedua sisi jalan utama
+for (const x of [-7.5, 7.5]) {
+    const sidewalk = new THREE.Mesh(
+        new THREE.PlaneGeometry(2, 200),
+        new THREE.MeshStandardMaterial({
+            color: 0x9ca3af
+        })
+    );
+
+    sidewalk.rotation.x = -Math.PI / 2;
+    sidewalk.position.set(x, -0.015, 0);
+    scene.add(sidewalk);
+}
 
 /* ===== KARAKTER PEMAIN 3D ===== */
 const player = {
