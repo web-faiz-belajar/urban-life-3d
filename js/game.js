@@ -28,7 +28,7 @@ async function loadBandungRoads() {
 
     try {
         const response = await fetch(
-            "https://overpass.private.coffee/api/interpreter"
+            "https://overpass.private.coffee/api/interpreter",
             {
                 method: "POST",
                 headers: {
@@ -55,23 +55,37 @@ async function loadBandungRoads() {
             }));
 
         bandungMapLoaded = true;
-        console.log("Data jalan Bandung berhasil dimuat:", bandungRoads.length);
-} catch (error) {
-    console.error("Gagal memuat data jalan Bandung:", error);
+        console.log(
+            "Data jalan Bandung berhasil dimuat:",
+            bandungRoads.length
+        );
 
-    mapCtx.clearRect(0, 0, minimap.width, minimap.height);
-    mapCtx.fillStyle = "#172a35";
-    mapCtx.fillRect(0, 0, minimap.width, minimap.height);
+        drawBandungMinimap();
 
-    mapCtx.fillStyle = "#fca5a5";
-    mapCtx.font = "12px Arial";
-    mapCtx.textAlign = "center";
-    mapCtx.fillText("Gagal memuat peta", minimap.width / 2, minimap.height / 2 - 8);
+    } catch (error) {
+        console.error("Gagal memuat data jalan Bandung:", error);
 
-    mapCtx.fillStyle = "#ffffff";
-    mapCtx.font = "10px Arial";
-    mapCtx.fillText("Periksa koneksi", minimap.width / 2, minimap.height / 2 + 10);
-}
+        mapCtx.clearRect(0, 0, minimap.width, minimap.height);
+        mapCtx.fillStyle = "#172a35";
+        mapCtx.fillRect(0, 0, minimap.width, minimap.height);
+
+        mapCtx.fillStyle = "#fca5a5";
+        mapCtx.font = "12px Arial";
+        mapCtx.textAlign = "center";
+        mapCtx.fillText(
+            "Gagal memuat peta",
+            minimap.width / 2,
+            minimap.height / 2 - 8
+        );
+
+        mapCtx.fillStyle = "#ffffff";
+        mapCtx.font = "10px Arial";
+        mapCtx.fillText(
+            "Periksa koneksi",
+            minimap.width / 2,
+            minimap.height / 2 + 10
+        );
+    }
 }
 
 loadBandungRoads();
