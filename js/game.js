@@ -121,14 +121,15 @@ function drawBandungMinimap() {
     mapCtx.stroke();
 }
 
-// Gambar ulang setelah data jalan berhasil dimuat
-const originalLoadBandungRoads = loadBandungRoads;
-
-loadBandungRoads().then(() => {
-    drawBandungMinimap();
-});
-
+// Gambar ulang setelah data jalan selesai dimuat
 drawBandungMinimap();
+
+const minimapRetry = setInterval(() => {
+    if (bandungMapLoaded) {
+        drawBandungMinimap();
+        clearInterval(minimapRetry);
+    }
+}, 1000);
 
 // ===== PENGATURAN DASAR =====
 const scene = new THREE.Scene();
