@@ -78,13 +78,50 @@ for (let z = -50; z <= 50; z += 12) {
     createBuilding(12, z, 7, 5 + Math.random() * 8, 0xc4b5a5);
 }
 
-// ===== PEMAIN =====
-// Pemain tidak digambar karena kamera berada pada sudut pandang orang pertama.
+
+/* ===== KARAKTER PEMAIN 3D ===== */
 const player = {
     x: 0,
     z: 5,
     speed: 5
 };
+
+const character = new THREE.Group();
+
+// Badan
+const body = new THREE.Mesh(
+    new THREE.BoxGeometry(0.65, 0.9, 0.35),
+    new THREE.MeshStandardMaterial({ color: 0x2563eb })
+);
+body.position.y = 1.05;
+character.add(body);
+
+// Kepala
+const head = new THREE.Mesh(
+    new THREE.SphereGeometry(0.25, 16, 16),
+    new THREE.MeshStandardMaterial({ color: 0xf1c27d })
+);
+head.position.y = 1.7;
+character.add(head);
+
+// Kaki kiri dan kanan
+const legMaterial = new THREE.MeshStandardMaterial({
+    color: 0x172554
+});
+
+const leftLeg = new THREE.Mesh(
+    new THREE.BoxGeometry(0.23, 0.65, 0.25),
+    legMaterial
+);
+leftLeg.position.set(-0.18, 0.38, 0);
+character.add(leftLeg);
+
+const rightLeg = leftLeg.clone();
+rightLeg.position.x = 0.18;
+character.add(rightLeg);
+
+// Tambahkan karakter ke dunia
+scene.add(character);
 
 let yaw = 0;
 let pitch = 0;
@@ -92,8 +129,14 @@ let joystickX = 0;
 let joystickY = 0;
 let running = false;
 
-// Posisi awal kamera
-camera.position.set(player.x, 1.7, player.z);
+
+/* ===== KAMERA ORANG KETIGA ===== */
+camera.position.set(
+    player.x,
+    4,
+    player.z + 7
+);
+
 camera.rotation.order = "YXZ";
 
 // ===== JOYSTICK =====
@@ -251,8 +294,24 @@ function animate(time = 0) {
     player.x = THREE.MathUtils.clamp(player.x, -40, 40);
     player.z = THREE.MathUtils.clamp(player.z, -90, 90);
 
-    camera.position.set(player.x, 1.7, player.z);
-    camera.rotation.set(pitch, yaw, 0, "YXZ");
+/* Kamera mengikuti dari belakang karakter */
+const cameraDistance = 7;
+const cameraHeight = 3.5;
+
+const targetX = player.x - Math.sin(yaw) * cameraDistance;
+const targetZ = player.z + Math.cos(yaw) * cameraDistance;
+
+camera.position.set(
+    targetX,
+    cameraHeight,
+    targetZ
+);
+
+camera.lookAt(
+    player.x,
+    1.3,
+    player.z
+);
 
     renderer.render(scene, camera);
 }
