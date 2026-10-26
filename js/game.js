@@ -1,6 +1,68 @@
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
+/* ===== DATA JALAN ASLI BANDUNG ===== */
+
+// Area awal: sebagian pusat Kota Bandung.
+// Format batas: [selatan, barat, utara, timur]
+const BANDUNG_MAP_BOUNDS = {
+    south: -6.925,
+    west: 107.595,
+    north: -6.905,
+    east: 107.625
+};
+
+let bandungRoads = [];
+let bandungMapLoaded = false;
+
+async function loadBandungRoads() {
+    const { south, west, north, east } = BANDUNG_MAP_BOUNDS;
+
+    const query = `
+        [out:json][timeout:25];
+        (
+          way["highway"](${south},${west},${north},${east});
+        );
+        out geom;
+    `;
+
+    try {
+        const response = await fetch(
+            "https://overpass-api.de/api/interpreter",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+                },
+                body: "data=" + encodeURIComponent(query)
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Server peta merespons " + response.status);
+        }
+
+        const data = await response.json();
+
+        bandungRoads = data.elements
+            .filter(way => way.geometry && way.geometry.length > 1)
+            .map(way => ({
+                type: way.tags?.highway || "road",
+                points: way.geometry.map(point => ({
+                    lat: point.lat,
+                    lon: point.lon
+                }))
+            }));
+
+        bandungMapLoaded = true;
+        console.log("Data jalan Bandung berhasil dimuat:", bandungRoads.length);
+    } catch (error) {
+        console.error("Gagal memuat data jalan Bandung:", error);
+    }
+}
+
+loadBandungRoads();
+
 // ===== PENGATURAN DASAR =====
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
