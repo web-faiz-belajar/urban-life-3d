@@ -63,6 +63,73 @@ async function loadBandungRoads() {
 
 loadBandungRoads();
 
+/* ===== GAMBAR JALAN PADA MINIMAP ===== */
+const minimap = document.getElementById("minimap");
+const mapCtx = minimap.getContext("2d");
+
+function drawBandungMinimap() {
+    const width = minimap.width;
+    const height = minimap.height;
+
+    // Latar minimap
+    mapCtx.fillStyle = "#172a35";
+    mapCtx.fillRect(0, 0, width, height);
+
+    if (!bandungMapLoaded) {
+        mapCtx.fillStyle = "#ffffff";
+        mapCtx.font = "12px Arial";
+        mapCtx.textAlign = "center";
+        mapCtx.fillText("Memuat peta...", width / 2, height / 2);
+        return;
+    }
+
+    const { south, west, north, east } = BANDUNG_MAP_BOUNDS;
+
+    // Gambar jalan berdasarkan koordinat geografis
+    for (const road of bandungRoads) {
+        mapCtx.beginPath();
+
+        road.points.forEach((point, index) => {
+            const x = ((point.lon - west) / (east - west)) * width;
+            const y = ((north - point.lat) / (north - south)) * height;
+
+            if (index === 0) {
+                mapCtx.moveTo(x, y);
+            } else {
+                mapCtx.lineTo(x, y);
+            }
+        });
+
+        mapCtx.strokeStyle =
+            road.type === "motorway" || road.type === "trunk"
+                ? "#fbbf24"
+                : "#cbd5e1";
+
+        mapCtx.lineWidth =
+            road.type === "motorway" || road.type === "trunk" ? 3 : 1.3;
+
+        mapCtx.stroke();
+    }
+
+    // Penanda pemain sementara di tengah minimap
+    mapCtx.beginPath();
+    mapCtx.arc(width / 2, height / 2, 5, 0, Math.PI * 2);
+    mapCtx.fillStyle = "#38bdf8";
+    mapCtx.fill();
+    mapCtx.strokeStyle = "#ffffff";
+    mapCtx.lineWidth = 2;
+    mapCtx.stroke();
+}
+
+// Gambar ulang setelah data jalan berhasil dimuat
+const originalLoadBandungRoads = loadBandungRoads;
+
+loadBandungRoads().then(() => {
+    drawBandungMinimap();
+});
+
+drawBandungMinimap();
+
 // ===== PENGATURAN DASAR =====
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
