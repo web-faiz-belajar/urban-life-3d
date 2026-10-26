@@ -391,6 +391,7 @@ window.addEventListener("resize", () => {
 animate();
 
 
+
 /* ===== MINIMAP BERGERAK ===== */
 const minimap = document.getElementById("minimap");
 
@@ -400,50 +401,47 @@ if (minimap) {
     function drawMinimap() {
         const w = minimap.width;
         const h = minimap.height;
-
-        // Latar minimap
-        ctx.fillStyle = "#172a35";
-        ctx.fillRect(0, 0, w, h);
-
-        // Ukuran area dunia yang terlihat
         const scale = 3;
         const centerX = w / 2;
         const centerY = h / 2;
 
-        // Posisi pemain dari dunia 3D
         const px = player.x;
         const pz = player.z;
 
-        // Gambar jalan utama relatif terhadap pemain
-        ctx.strokeStyle = "#cbd5e1";
-        ctx.lineWidth = 5;
+        ctx.fillStyle = "#172a35";
+        ctx.fillRect(0, 0, w, h);
 
-        ctx.beginPath();
-        ctx.moveTo(centerX - px * scale, 0);
-        ctx.lineTo(centerX - px * scale, h);
-        ctx.stroke();
-
-        // Gambar jalan silang yang ikut bergeser
-        ctx.strokeStyle = "#94a3b8";
-        ctx.lineWidth = 3;
-
-        for (let z = -200; z <= 200; z += 35) {
-            const y = centerY + (z - pz) * scale;
-
-            if (y >= 0 && y <= h) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(w, y);
-                ctx.stroke();
-            }
-        }
-
-        // Putar minimap sesuai arah hadap karakter
+        // Jalan utama
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.rotate(-character.rotation.y);
 
-        // Penanda arah pemain berbentuk segitiga
+        ctx.strokeStyle = "#cbd5e1";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(-px * scale, -h);
+        ctx.lineTo(-px * scale, h);
+        ctx.stroke();
+
+        // Jalan silang
+        ctx.strokeStyle = "#94a3b8";
+        ctx.lineWidth = 3;
+
+        for (let z = -200; z <= 200; z += 35) {
+            const y = (z - pz) * scale;
+
+            ctx.beginPath();
+            ctx.moveTo(-w, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+
+        // Penanda arah pemain
+        ctx.save();
+        ctx.translate(centerX, centerY);
+
         ctx.beginPath();
         ctx.moveTo(0, -12);
         ctx.lineTo(-7, 7);
@@ -457,8 +455,8 @@ if (minimap) {
         ctx.stroke();
 
         ctx.restore();
+    }
 
-    // Gambar minimap berulang kali
     function updateMinimap() {
         drawMinimap();
         requestAnimationFrame(updateMinimap);
