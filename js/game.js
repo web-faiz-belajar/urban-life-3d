@@ -392,7 +392,7 @@ function animate(time = 0) {
     const isLandscape = window.innerWidth > window.innerHeight;
 
     const cameraDistance = isLandscape ? 3 : 4;
-    const cameraHeight = isLandscape ? 2.2 : 2.8;
+    const cameraHeight = isLandscape ? 1.8 : 2.8;
 
     const targetX =
         player.x - Math.sin(yaw) * cameraDistance;
@@ -413,7 +413,7 @@ function animate(time = 0) {
         (targetZ - camera.position.z) * smoothness;
 
     // Kamera melihat ke arah karakter
-    camera.lookAt(player.x, 1.3, player.z);
+    camera.lookAt(player.x, 0.9, player.z);
 
     renderer.render(scene, camera);
 }
