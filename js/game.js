@@ -432,7 +432,7 @@ const lonCenter =
     107.605 + player.x / (111320 * Math.cos(latCenter * Math.PI / 180));
 
 const latPusat =
-    latCenter - player.z / 111320;
+    latCenter + player.z / 111320;
 
         const zoom = 3;
 
