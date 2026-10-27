@@ -2,26 +2,31 @@
 (() => {
     "use strict";
 
-    const container = document.getElementById("game-container");
-    const loading = document.getElementById("loading-screen");
-    const loadingStatus = document.getElementById("loading-status");
-    const locationName = document.getElementById("location-name");
-    const minimapCanvas = document.getElementById("minimap-canvas");
-    const mapCtx = minimapCanvas.getContext("2d");
-    const joystick = document.getElementById("joystick");
-    const stick = document.getElementById("stick");
-    const runButton = document.getElementById("run-button");
+    // ==========================================
+    // URBAN LIFE 3D — BANDUNG
+    // New low-poly city foundation
+    // ==========================================
+
+    const $ = id => document.getElementById(id);
+    const container = $("game-container");
+    const loading = $("loading-screen");
+    const loadingStatus = $("loading-status");
+    const locationLabel = $("location-name");
+    const joystick = $("joystick");
+    const stick = $("stick");
+    const runButton = $("run-button");
+    const mapCanvas = $("minimap-canvas");
+    const map = mapCanvas.getContext("2d");
 
     if (!window.THREE) {
-        loadingStatus.textContent = "Three.js gagal dimuat. Periksa internet.";
+        loadingStatus.textContent = "Three.js gagal dimuat.";
         return;
     }
 
-    loadingStatus.textContent = "Membangun kawasan Bandung...";
-
+    // ---------- SCENE ----------
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x9bc7df);
-    scene.fog = new THREE.Fog(0x9bc7df, 90, 260);
+    scene.background = new THREE.Color(0x9fc7dc);
+    scene.fog = new THREE.Fog(0x9fc7dc, 100, 300);
 
     const camera = new THREE.PerspectiveCamera(
         65, innerWidth / innerHeight, 0.1, 500
@@ -34,215 +39,268 @@
 
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
     renderer.setSize(innerWidth, innerHeight);
-    renderer.shadowMap.enabled = false;
     renderer.outputEncoding = THREE.sRGBEncoding;
     container.appendChild(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xd9efff, 0x58604c, 2));
+    scene.add(new THREE.HemisphereLight(0xe5f4ff, 0x56604a, 2));
 
-    const sunlight = new THREE.DirectionalLight(0xffedcf, 2);
-    sunlight.position.set(-35, 70, 25);
-    scene.add(sunlight);
+    const sun = new THREE.DirectionalLight(0xffedcf, 2.2);
+    sun.position.set(-40, 70, 30);
+    scene.add(sun);
 
-    const mat = (color, roughness = 1) =>
-        new THREE.MeshStandardMaterial({ color, roughness });
+    // ---------- MATERIALS ----------
+    function material(color, roughness = 1) {
+        return new THREE.MeshStandardMaterial({ color, roughness });
+    }
 
-    const materials = {
-        grass: mat(0x587d59),
-        road: mat(0x303943),
-        sidewalk: mat(0xb8b5a8),
-        white: mat(0xf3eee0),
-        yellow: mat(0xf3c75b),
-        red: mat(0xb95c4c),
-        teal: mat(0x397b79),
-        blue: mat(0x527a9c),
-        cream: mat(0xd9c7a6),
-        dark: mat(0x343a46),
-        glass: mat(0x477c8d),
-        tree: mat(0x356747),
-        trunk: mat(0x70503a)
+    const M = {
+        grass: material(0x63805b),
+        road: material(0x343941),
+        sidewalk: material(0xbdb9ac),
+        line: material(0xf4d77c),
+        cream: material(0xe3d2b3),
+        white: material(0xece9df),
+        brick: material(0xb96955),
+        blue: material(0x557f9d),
+        green: material(0x4c8378),
+        yellow: material(0xd8ae56),
+        glass: material(0x568a99),
+        dark: material(0x343640),
+        leaf: material(0x356849),
+        trunk: material(0x72503a),
+        skin: material(0xd6a17d),
+        shirt: material(0x3566a8),
+        pants: material(0x303746),
+        shoe: material(0x20232b)
     };
 
-    function box(x, y, z, sx, sy, sz, material, parent = scene) {
+    function box(parent, x, y, z, w, h, d, mat) {
         const mesh = new THREE.Mesh(
-            new THREE.BoxGeometry(sx, sy, sz), material
+            new THREE.BoxGeometry(w, h, d), mat
         );
         mesh.position.set(x, y, z);
         parent.add(mesh);
         return mesh;
     }
 
-    function cylinder(x, y, z, radiusTop, radiusBottom, height, material) {
+    function sphere(parent, x, y, z, r, mat) {
         const mesh = new THREE.Mesh(
-            new THREE.CylinderGeometry(radiusTop, radiusBottom, height, 7),
-            material
+            new THREE.SphereGeometry(r, 10, 8), mat
         );
         mesh.position.set(x, y, z);
-        scene.add(mesh);
+        parent.add(mesh);
         return mesh;
     }
 
-    // Ground
-    box(0, -0.35, 0, 240, 0.6, 240, materials.grass);
+    // ---------- GROUND ----------
+    box(scene, 0, -0.4, 0, 250, 0.7, 250, M.grass);
 
-    // Roads follow connected, gently winding points.
+    // ---------- CITY ROADS ----------
+    // The main road follows a gently winding path.
     const roadPoints = [
-        [-100, 0], [-72, 4], [-45, 0], [-20, 7],
-        [5, 2], [30, 10], [56, 5], [82, 13], [105, 8]
+        [-110, -8], [-82, -3], [-55, -7],
+        [-28, 1], [0, -3], [28, 5],
+        [55, 1], [82, 10], [110, 5]
     ];
 
-    function roadSegment(a, b, width = 10) {
+    function makeRoad(a, b, width) {
         const dx = b[0] - a[0];
         const dz = b[1] - a[1];
-        const length = Math.hypot(dx, dz);
+        const len = Math.hypot(dx, dz);
         const angle = Math.atan2(dz, dx);
         const mx = (a[0] + b[0]) / 2;
         const mz = (a[1] + b[1]) / 2;
 
-        const road = box(mx, -0.015, mz, length + 1, 0.12, width, materials.road);
+        const road = box(
+            scene, mx, -0.02, mz,
+            len + 1, 0.13, width, M.road
+        );
         road.rotation.y = -angle;
 
-        const edgeOffset = width / 2 + 0.8;
+        // Sidewalk edges
         for (const side of [-1, 1]) {
-            const ex = -Math.sin(angle) * edgeOffset * side;
-            const ez = Math.cos(angle) * edgeOffset * side;
-            const walk = box(mx + ex, 0.04, mz + ez,
-                length + 1, 0.18, 1.6, materials.sidewalk);
-            walk.rotation.y = -angle;
+            const offset = width / 2 + 1;
+            const sx = -Math.sin(angle) * offset * side;
+            const sz = Math.cos(angle) * offset * side;
+
+            const pavement = box(
+                scene, mx + sx, 0.035, mz + sz,
+                len + 1, 0.18, 1.7, M.sidewalk
+            );
+            pavement.rotation.y = -angle;
         }
 
-        // Short dashed center markings
-        const dashCount = Math.floor(length / 7);
-        for (let i = 1; i < dashCount; i++) {
-            const t = i / dashCount;
+        // Road markings
+        const count = Math.floor(len / 7);
+        for (let i = 1; i < count; i++) {
+            const t = i / count;
             const dash = box(
-                a[0] + dx * t, 0.06, a[1] + dz * t,
-                2.3, 0.035, 0.14, materials.yellow
+                scene,
+                a[0] + dx * t, 0.055, a[1] + dz * t,
+                2.1, 0.025, 0.13, M.line
             );
             dash.rotation.y = -angle;
         }
     }
 
     for (let i = 0; i < roadPoints.length - 1; i++) {
-        roadSegment(roadPoints[i], roadPoints[i + 1], 11);
+        makeRoad(roadPoints[i], roadPoints[i + 1], 12);
     }
 
     // Side streets
     const sideRoads = [
-        { x: -70, z: -53, end: 45 },
-        { x: -35, z: 25, end: 48 },
-        { x: 2, z: -42, end: 42 },
-        { x: 39, z: 30, end: 48 },
-        { x: 72, z: -35, end: 43 }
+        { x: -75, z: -50, end: 48 },
+        { x: -42, z: 5, end: 42 },
+        { x: -8, z: -48, end: 43 },
+        { x: 30, z: 10, end: 46 },
+        { x: 68, z: -38, end: 45 }
     ];
 
-    sideRoads.forEach(r => {
-        roadSegment([r.x, -r.end], [r.x + 5, r.end], 7);
-    });
+    for (const r of sideRoads) {
+        makeRoad([r.x, -r.end], [r.x + 3, r.end], 7);
+    }
 
-    // Buildings with colorful facades and storefront windows
-    const facadeMaterials = [
-        materials.cream, materials.white, materials.red,
-        materials.teal, materials.blue, materials.yellow
+    // ---------- BRAGA-INSPIRED BUILDINGS ----------
+    const facades = [
+        M.cream, M.white, M.brick, M.green, M.blue, M.yellow
     ];
 
-    function building(x, z, width, depth, height, colorIndex) {
+    function makeBuilding(x, z, w, d, h, index) {
         const group = new THREE.Group();
         group.position.set(x, 0, z);
         scene.add(group);
 
-        const facade = facadeMaterials[colorIndex % facadeMaterials.length];
-        box(0, height / 2, 0, width, height, depth, facade, group);
+        const facade = facades[index % facades.length];
 
-        // Flat roof and dark storefront base
-        box(0, height + 0.18, 0, width + 0.5, 0.36, depth + 0.4,
-            materials.dark, group);
-        box(0, 0.8, depth / 2 + 0.035, width * 0.88, 1.5, 0.09,
-            materials.dark, group);
+        box(group, 0, h / 2, 0, w, h, d, facade);
 
-        const windows = Math.max(2, Math.floor(width / 2.4));
-        for (let i = 0; i < windows; i++) {
-            const wx = -width / 2 + width * (i + 0.5) / windows;
-            box(wx, height * 0.59, depth / 2 + 0.06,
-                width / windows * 0.62, height * 0.25, 0.08,
-                materials.glass, group);
-            box(wx, height * 0.39, depth / 2 + 0.09,
-                width / windows * 0.72, 0.13, 0.12,
-                materials.white, group);
+        // Roof trim
+        box(
+            group, 0, h + 0.15, 0,
+            w + 0.45, 0.3, d + 0.4, M.dark
+        );
+
+        // Storefront base
+        box(
+            group, 0, 0.85, d / 2 + 0.05,
+            w * 0.88, 1.55, 0.1, M.dark
+        );
+
+        // Windows
+        const windowCount = Math.max(2, Math.floor(w / 2.3));
+        for (let i = 0; i < windowCount; i++) {
+            const wx = -w / 2 + w * (i + 0.5) / windowCount;
+
+            box(
+                group, wx, h * 0.59, d / 2 + 0.07,
+                w / windowCount * 0.6, h * 0.23,
+                0.09, M.glass
+            );
         }
 
-        // Simple signboard
-        box(0, 2.0, depth / 2 + 0.13, width * 0.7, 0.35, 0.12,
-            materials.yellow, group);
+        // Shop sign
+        box(
+            group, 0, 2.05, d / 2 + 0.13,
+            w * 0.72, 0.32, 0.12, M.yellow
+        );
+
+        // Entrance
+        box(
+            group, 0, 0.95, d / 2 + 0.14,
+            0.8, 1.7, 0.12, M.glass
+        );
     }
 
-    // Keep the central road open; place buildings along both sides.
-    for (let i = 0; i < 33; i++) {
-        const x = -92 + i * 5.7;
-        const zRoad = 3 + Math.sin((x + 15) / 17) * 4;
-        const width = 3.5 + (i % 3) * 1.1;
-        const depth = 5 + (i % 2) * 2;
-        const height = 5 + (i % 4) * 1.8;
+    for (let i = 0; i < 36; i++) {
+        const x = -98 + i * 5.6;
+        const roadZ = -3 + Math.sin((x + 10) / 18) * 4;
+        const w = 3.8 + (i % 3) * 0.9;
+        const d = 5.5 + (i % 2) * 1.5;
+        const h = 5.5 + (i % 4) * 1.8;
 
-        building(x, zRoad - 12 - depth / 2, width, depth, height, i);
-        building(x + 2, zRoad + 12 + depth / 2,
-            width, depth, height + (i % 3), i + 2);
+        makeBuilding(
+            x, roadZ - 12 - d / 2, w, d, h, i
+        );
+
+        makeBuilding(
+            x + 1.5, roadZ + 12 + d / 2,
+            w, d, h + (i % 3), i + 2
+        );
     }
 
-    // Trees on sidewalks and small parks
-    function tree(x, z, scale = 1) {
-        cylinder(x, 1.1 * scale, z, 0.16 * scale, 0.22 * scale,
-            2.2 * scale, materials.trunk);
+    // ---------- TREES & STREET PROPS ----------
+    function makeTree(x, z, size = 1) {
+        const trunk = new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                0.14 * size, 0.2 * size, 1.8 * size, 7
+            ),
+            M.trunk
+        );
+        trunk.position.set(x, 0.9 * size, z);
+        scene.add(trunk);
 
         const crown = new THREE.Mesh(
-            new THREE.SphereGeometry(1.15 * scale, 7, 6),
-            materials.tree
+            new THREE.IcosahedronGeometry(1.05 * size, 1),
+            M.leaf
         );
-        crown.position.set(x, 2.8 * scale, z);
+        crown.position.set(x, 2.25 * size, z);
         scene.add(crown);
     }
 
-    for (let i = 0; i < 38; i++) {
-        const x = -92 + i * 5;
-        const z = 3 + Math.sin((x + 15) / 17) * 4;
-        tree(x, z - 8.5, 0.8);
-        tree(x + 1.5, z + 8.5, 0.8);
+    for (let i = 0; i < 40; i++) {
+        const x = -95 + i * 4.9;
+        const z = -3 + Math.sin((x + 10) / 18) * 4;
+
+        makeTree(x, z - 8.5, 0.8);
+        makeTree(x + 1, z + 8.5, 0.8);
     }
 
-    // Player character
+    // ---------- PLAYER CHARACTER ----------
     const player = new THREE.Group();
     scene.add(player);
 
-    const body = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.42, 0.5, 1.25, 8),
-        mat(0x2563eb)
-    );
-    body.position.y = 1.1;
+    const body = new THREE.Group();
     player.add(body);
 
-    const head = new THREE.Mesh(
-        new THREE.SphereGeometry(0.34, 10, 8),
-        mat(0xf0c8a2)
+    box(body, 0, 1.25, 0, 0.85, 0.9, 0.48, M.shirt);
+    sphere(body, 0, 1.95, 0, 0.31, M.skin);
+
+    // Hair
+    sphere(body, 0, 2.12, -0.015, 0.31, M.dark);
+
+    // Legs
+    const leftLeg = box(
+        body, -0.22, 0.55, 0, 0.27, 0.65, 0.3, M.pants
     );
-    head.position.y = 1.98;
-    player.add(head);
-
-    const hair = new THREE.Mesh(
-        new THREE.SphereGeometry(0.35, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2),
-        mat(0x30271f)
+    const rightLeg = box(
+        body, 0.22, 0.55, 0, 0.27, 0.65, 0.3, M.pants
     );
-    hair.position.y = 2.13;
-    player.add(hair);
 
-    player.position.set(0, 0, 0);
+    box(body, -0.22, 0.18, 0.07, 0.3, 0.18, 0.43, M.shoe);
+    box(body, 0.22, 0.18, 0.07, 0.3, 0.18, 0.43, M.shoe);
 
-    // Camera follows the player from behind.
+    // Arms
+    const leftArm = box(
+        body, -0.55, 1.25, 0, 0.23, 0.75, 0.25, M.shirt
+    );
+    const rightArm = box(
+        body, 0.55, 1.25, 0, 0.23, 0.75, 0.25, M.shirt
+    );
+
+    player.position.set(0, 0, -3);
+
+    // ---------- CAMERA & INPUT ----------
     let cameraYaw = 0;
     let cameraPitch = 0.22;
-    let running = false;
     let moveX = 0;
     let moveY = 0;
+    let running = false;
+    let joystickPointer = null;
+    let lookPointer = null;
+    let previousX = 0;
+    let previousY = 0;
     let lastTime = performance.now();
+    let walkTime = 0;
 
     function updateCamera() {
         const distance = 8;
@@ -250,39 +308,40 @@
 
         camera.position.set(
             player.position.x + Math.sin(cameraYaw) * horizontal,
-            player.position.y + 4 + Math.sin(cameraPitch) * distance,
+            player.position.y + 3.5 +
+                Math.sin(cameraPitch) * distance,
             player.position.z + Math.cos(cameraYaw) * horizontal
         );
 
         camera.lookAt(
             player.position.x,
-            player.position.y + 1.2,
+            player.position.y + 1.1,
             player.position.z
         );
     }
 
     updateCamera();
 
-    // Touch joystick
-    let joystickPointer = null;
-
+    // Joystick input: up = forward, left = left.
     function updateStick(event) {
         const rect = joystick.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
-        let dx = event.clientX - cx;
-        let dy = event.clientY - cy;
+
+        let x = event.clientX - cx;
+        let y = event.clientY - cy;
+
         const max = rect.width * 0.32;
-        const length = Math.hypot(dx, dy);
+        const length = Math.hypot(x, y);
 
         if (length > max) {
-            dx = dx / length * max;
-            dy = dy / length * max;
+            x = x / length * max;
+            y = y / length * max;
         }
 
-        moveX = dx / max;
-        moveY = dy / max;
-        stick.style.transform = `translate(${dx}px, ${dy}px)`;
+        moveX = x / max;
+        moveY = y / max;
+        stick.style.transform = `translate(${x}px, ${y}px)`;
     }
 
     joystick.addEventListener("pointerdown", event => {
@@ -293,11 +352,14 @@
     });
 
     joystick.addEventListener("pointermove", event => {
-        if (event.pointerId === joystickPointer) updateStick(event);
+        if (event.pointerId === joystickPointer) {
+            updateStick(event);
+        }
     });
 
     function releaseJoystick(event) {
         if (event.pointerId !== joystickPointer) return;
+
         joystickPointer = null;
         moveX = 0;
         moveY = 0;
@@ -311,15 +373,15 @@
         event.preventDefault();
         running = true;
     });
+
     ["pointerup", "pointercancel", "pointerleave"].forEach(type => {
-        runButton.addEventListener(type, () => running = false);
+        runButton.addEventListener(type, () => {
+            running = false;
+        });
     });
 
-    // Drag anywhere outside controls to look around
-    let lookPointer = null;
-    let previousX = 0;
-    let previousY = 0;
-
+    // Camera drag: swipe right turns view right;
+    // swipe up looks upward.
     renderer.domElement.addEventListener("pointerdown", event => {
         lookPointer = event.pointerId;
         previousX = event.clientX;
@@ -327,108 +389,126 @@
     });
 
     renderer.domElement.addEventListener("pointermove", event => {
-        if (lookPointer !== event.pointerId) return;
+        if (event.pointerId !== lookPointer) return;
 
         const dx = event.clientX - previousX;
         const dy = event.clientY - previousY;
+
         previousX = event.clientX;
         previousY = event.clientY;
 
-        cameraYaw += dx * 0.006;
-    cameraPitch = Math.max(-0.05,
-    Math.min(0.65, cameraPitch + dy * 0.003));
+        cameraYaw -= dx * 0.006;
+        cameraPitch = THREE.MathUtils.clamp(
+            cameraPitch + dy * 0.004, -0.05, 0.65
+        );
     });
 
     function endLook(event) {
-        if (lookPointer === event.pointerId) lookPointer = null;
+        if (event.pointerId === lookPointer) {
+            lookPointer = null;
+        }
     }
+
     renderer.domElement.addEventListener("pointerup", endLook);
     renderer.domElement.addEventListener("pointercancel", endLook);
 
-    // Simple minimap
+    // ---------- MINIMAP ----------
     function drawMinimap() {
-        const w = minimapCanvas.width;
-        const h = minimapCanvas.height;
+        const w = mapCanvas.width;
+        const h = mapCanvas.height;
         const scale = w / 240;
 
-        mapCtx.clearRect(0, 0, w, h);
-        mapCtx.fillStyle = "#294b3c";
-        mapCtx.fillRect(0, 0, w, h);
+        map.clearRect(0, 0, w, h);
+        map.fillStyle = "#294b3c";
+        map.fillRect(0, 0, w, h);
 
-        mapCtx.strokeStyle = "#59636b";
-        mapCtx.lineWidth = 7;
-        mapCtx.lineCap = "round";
-        mapCtx.beginPath();
+        map.strokeStyle = "#59636b";
+        map.lineWidth = 7;
+        map.lineCap = "round";
+        map.beginPath();
 
         roadPoints.forEach((p, i) => {
             const x = w / 2 + p[0] * scale;
             const y = h / 2 + p[1] * scale;
-            if (i === 0) mapCtx.moveTo(x, y);
-            else mapCtx.lineTo(x, y);
-        });
-        mapCtx.stroke();
 
-        mapCtx.fillStyle = "#d9d2b8";
-        sideRoads.forEach(r => {
-            mapCtx.fillRect(
-                w / 2 + r.x * scale - 1,
-                h / 2 - 50 * scale,
-                2,
-                100 * scale
-            );
+            if (i === 0) map.moveTo(x, y);
+            else map.lineTo(x, y);
         });
 
-        mapCtx.fillStyle = "#f4ca58";
-        mapCtx.beginPath();
-        mapCtx.arc(
+        map.stroke();
+
+        map.fillStyle = "#f4ca58";
+        map.beginPath();
+        map.arc(
             w / 2 + player.position.x * scale,
             h / 2 + player.position.z * scale,
             4, 0, Math.PI * 2
         );
-        mapCtx.fill();
+        map.fill();
     }
 
     function updateLocation() {
-        if (player.position.x < -35) {
-            locationName.textContent = "Kawasan Cihampelas";
-        } else if (player.position.x < 35) {
-            locationName.textContent = "Kawasan Braga";
+        const x = player.position.x;
+
+        if (x < -35) {
+            locationLabel.textContent = "Kawasan Cihampelas";
+        } else if (x < 35) {
+            locationLabel.textContent = "Kawasan Braga";
         } else {
-            locationName.textContent = "Bandung District";
+            locationLabel.textContent = "Bandung District";
         }
     }
 
+    // ---------- GAME LOOP ----------
     function animate(now) {
         requestAnimationFrame(animate);
 
         const delta = Math.min((now - lastTime) / 1000, 0.05);
         lastTime = now;
 
-        const inputLength = Math.hypot(moveX, moveY);
-        if (inputLength > 0.08) {
-            const speed = running ? 10 : 5;
-            const forward = -moveY;
-            const strafe = moveX;
-            const dx = (
-                  Math.sin(cameraYaw) * forward +
-                  Math.cos(cameraYaw) * strafe
-           ) * speed * delta;
-           const dz = (
-                 -Math.cos(cameraYaw) * forward +
-                  Math.sin(cameraYaw) * strafe
-          ) * speed * delta;
+        const forward = -moveY;
+        const strafe = moveX;
+        const inputLength = Math.hypot(forward, strafe);
 
-            player.position.x -= dx;
+        if (inputLength > 0.08) {
+            const speed = running ? 9 : 4.5;
+
+            // Camera-relative movement.
+            const dx = (
+                -Math.sin(cameraYaw) * forward +
+                 Math.cos(cameraYaw) * strafe
+            ) * speed * delta;
+
+            const dz = (
+                -Math.cos(cameraYaw) * forward -
+                 Math.sin(cameraYaw) * strafe
+            ) * speed * delta;
+
+            player.position.x += dx;
             player.position.z += dz;
 
             player.position.x = THREE.MathUtils.clamp(
-                player.position.x, -112, 112
-            );
-            player.position.z = THREE.MathUtils.clamp(
-                player.position.z, -105, 105
+                player.position.x, -115, 115
             );
 
+            player.position.z = THREE.MathUtils.clamp(
+                player.position.z, -110, 110
+            );
+
+            // Face the direction of travel.
             player.rotation.y = Math.atan2(dx, dz);
+
+            // Simple walking animation.
+            walkTime += delta * speed;
+            leftLeg.rotation.x = Math.sin(walkTime) * 0.45;
+            rightLeg.rotation.x = -Math.sin(walkTime) * 0.45;
+            leftArm.rotation.x = -Math.sin(walkTime) * 0.3;
+            rightArm.rotation.x = Math.sin(walkTime) * 0.3;
+        } else {
+            leftLeg.rotation.x *= 0.8;
+            rightLeg.rotation.x *= 0.8;
+            leftArm.rotation.x *= 0.8;
+            rightArm.rotation.x *= 0.8;
         }
 
         updateCamera();
@@ -449,5 +529,5 @@
     setTimeout(() => {
         loading.style.opacity = "0";
         setTimeout(() => loading.remove(), 600);
-    }, 900);
+    }, 1000);
 })();
