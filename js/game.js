@@ -216,8 +216,8 @@ let running = false;
 /* ===== KAMERA ORANG KETIGA ===== */
 camera.position.set(
     player.x,
-    4,
-    player.z + 7
+    2.2,
+    player.z + 3.5
 );
 
 camera.rotation.order = "YXZ";
