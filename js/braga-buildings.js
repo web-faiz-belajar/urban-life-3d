@@ -21,6 +21,6 @@ export async function loadBragaBuildings() {
     }
 
     console.log("Bangunan Braga dimuat:", buildings.length);
-
+    console.log("Contoh bangunan Braga:", buildings[0]);
     return buildings;
 }
