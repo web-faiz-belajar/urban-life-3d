@@ -454,8 +454,7 @@ function animate(time = 0) {
     const targetZ =
         player.z + Math.cos(yaw) * horizontalDistance;
 
-    const targetY =
-        cameraHeight + Math.sin(pitch) * cameraDistance;
+    const targetY = cameraHeight;
 
     // Haluskan gerakan kamera
     const smoothness = 1 - Math.exp(-6 * delta);
