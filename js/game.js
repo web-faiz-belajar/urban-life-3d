@@ -445,8 +445,9 @@ function animate(time = 0) {
 
     pitch = THREE.MathUtils.clamp(pitch, -0.8, 0.8);
 
-    const horizontalDistance =
-        cameraDistance * Math.cos(pitch);
+    
+    // Posisi kamera tetap di belakang karakter
+    const horizontalDistance = cameraDistance;
 
     const targetX =
         player.x - Math.sin(yaw) * horizontalDistance;
