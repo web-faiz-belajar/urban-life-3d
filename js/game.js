@@ -1,6 +1,7 @@
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 import { loadBandungMap } from "./bandung-map.js";
+import { loadBragaBuildings } from "./braga-buildings.js";
 // ===== PENGATURAN DASAR =====
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
