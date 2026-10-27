@@ -636,6 +636,73 @@ loadBandungMap()
         console.error("Gagal memuat jalan Bandung:", error);
     });
 
+/* ===== JALAN BUATAN KOTA BANDUNG ===== */
+function createCustomBandungRoads() {
+    const roadMaterial = new THREE.MeshStandardMaterial({
+        color: 0x343943,
+        roughness: 0.95,
+        side: THREE.DoubleSide
+    });
+
+    const roadPaths = [
+        [
+            [-30, 0], [-20, 2], [-10, 8],
+            [0, 10], [10, 7], [20, 10], [30, 18]
+        ],
+        [
+            [-20, 2], [-18, 12], [-10, 20],
+            [0, 24], [12, 22], [22, 28]
+        ],
+        [
+            [-10, 8], [-8, 0], [-3, -10],
+            [8, -17], [18, -20]
+        ],
+        [
+            [10, 7], [15, 0], [22, -5],
+            [30, -7]
+        ],
+        [
+            [0, 24], [3, 32], [10, 38],
+            [20, 40]
+        ]
+    ];
+
+    for (const path of roadPaths) {
+        for (let i = 0; i < path.length - 1; i++) {
+            const start = new THREE.Vector3(
+                path[i][0], -0.045, path[i][1]
+            );
+            const end = new THREE.Vector3(
+                path[i + 1][0], -0.045, path[i + 1][1]
+            );
+
+            const dx = end.x - start.x;
+            const dz = end.z - start.z;
+            const length = Math.hypot(dx, dz);
+
+            if (length < 0.1) continue;
+
+            const road = new THREE.Mesh(
+                new THREE.PlaneGeometry(4, length),
+                roadMaterial
+            );
+
+            road.rotation.x = -Math.PI / 2;
+            road.rotation.z = -Math.atan2(dx, dz);
+            road.position.set(
+                (start.x + end.x) / 2,
+                -0.045,
+                (start.z + end.z) / 2
+            );
+
+            road.receiveShadow = true;
+            scene.add(road);
+        }
+    }
+
+    console.log("Jalan buatan Bandung berhasil dibuat.");
+}
+
 /* ===== MEMUAT BANGUNAN BRAGA ===== */
 loadBragaBuildings()
     .then((buildings) => {
