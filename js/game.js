@@ -421,28 +421,41 @@ if (minimap) {
         ctx.fillStyle = "#172a35";
         ctx.fillRect(0, 0, w, h);
 
-        // Jalan utama
+        // Jalan asli dari GeoJSON Bandung
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.rotate(-character.rotation.y);
 
+        const lonMin = 107.595;
+        const lonMax = 107.615;
+        const latMin = -6.925;
+        const latMax = -6.905;
+
+        const mapWidth = w;
+        const mapHeight = h;
+
         ctx.strokeStyle = "#cbd5e1";
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.moveTo(-px * scale, -h);
-        ctx.lineTo(-px * scale, h);
-        ctx.stroke();
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
 
-        // Jalan silang
-        ctx.strokeStyle = "#94a3b8";
-        ctx.lineWidth = 3;
-
-        for (let z = -200; z <= 200; z += 35) {
-            const y = (z - pz) * scale;
-
+        for (const road of bandungRoads) {
             ctx.beginPath();
-            ctx.moveTo(-w, y);
-            ctx.lineTo(w, y);
+
+            for (let i = 0; i < road.length; i++) {
+                const lon = road[i][0];
+                const lat = road[i][1];
+
+                const x = ((lon - lonMin) / (lonMax - lonMin)) * mapWidth - centerX;
+                const y = ((latMax - lat) / (latMax - latMin)) * mapHeight - centerY;
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+
             ctx.stroke();
         }
 
