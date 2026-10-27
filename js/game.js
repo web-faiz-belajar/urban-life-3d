@@ -173,18 +173,18 @@ const character = new THREE.Group();
 
 // Badan
 const body = new THREE.Mesh(
-    new THREE.BoxGeometry(0.65, 0.9, 0.35),
+    new THREE.BoxGeometry(0.39, 0.54, 0.21),
     new THREE.MeshStandardMaterial({ color: 0x2563eb })
 );
-body.position.y = 1.05;
+body.position.y = 0.72;
 character.add(body);
 
 // Kepala
 const head = new THREE.Mesh(
-    new THREE.SphereGeometry(0.25, 16, 16),
+    new THREE.SphereGeometry(0.15, 16, 16),
     new THREE.MeshStandardMaterial({ color: 0xf1c27d })
 );
-head.position.y = 1.7;
+head.position.y = 1.08;
 character.add(head);
 
 // Kaki kiri dan kanan
@@ -193,14 +193,14 @@ const legMaterial = new THREE.MeshStandardMaterial({
 });
 
 const leftLeg = new THREE.Mesh(
-    new THREE.BoxGeometry(0.23, 0.65, 0.25),
+    new THREE.BoxGeometry(0.14, 0.39, 0.15),
     legMaterial
 );
-leftLeg.position.set(-0.18, 0.38, 0);
+leftLeg.position.set(-0.11, 0.25, 0);
 character.add(leftLeg);
 
 const rightLeg = leftLeg.clone();
-rightLeg.position.x = 0.18;
+rightLeg.position.x = 0.11;
 character.add(rightLeg);
 
 // Tambahkan karakter ke dunia
@@ -211,7 +211,6 @@ let pitch = 0;
 let joystickX = 0;
 let joystickY = 0;
 let running = false;
-
 
 /* ===== KAMERA ORANG KETIGA ===== */
 camera.position.set(
