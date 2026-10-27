@@ -163,7 +163,7 @@ function createBragaBuildings(buildings) {
 }
 
 /* ===== KARAKTER PEMAIN 3D ===== */
-character.scale.set(1.25, 1.25, 1.25);
+character.scale.set(0.7, 0.7, 0.7);
 const player = {
     x: 0,
     z: 5,
