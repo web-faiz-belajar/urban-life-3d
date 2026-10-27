@@ -397,6 +397,7 @@ loadBandungMap()
     .then((roads) => {
         bandungRoads = roads;
         console.log("Jalan Bandung dimuat:", bandungRoads.length);
+        alert("Jalur jalan Bandung dimuat: " + bandungRoads.length);
     })
     .catch((error) => {
         console.error("Gagal memuat jalan Bandung:", error);
