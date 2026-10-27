@@ -413,8 +413,13 @@ function animate(time = 0) {
         (targetZ - camera.position.z) * smoothness;
 
     // Kamera melihat ke arah karakter
-    camera.lookAt(player.x, 0.9, player.z);
+    const lookDistance = 5;
 
+camera.lookAt(
+    player.x + Math.sin(yaw) * Math.cos(pitch) * lookDistance,
+    0.9 + Math.sin(pitch) * lookDistance,
+    player.z - Math.cos(yaw) * Math.cos(pitch) * lookDistance
+);
     renderer.render(scene, camera);
 }
 
