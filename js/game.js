@@ -2,6 +2,7 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 import { loadBandungMap } from "./bandung-map.js";
 import { loadBragaBuildings } from "./braga-buildings.js";
+
 // ===== PENGATURAN DASAR =====
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
@@ -26,7 +27,9 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 // ===== PENCAHAYAAN =====
-scene.add(new THREE.HemisphereLight(0xffffff, 0x52634b, 2));
+scene.add(
+    new THREE.HemisphereLight(0xffffff, 0x52634b, 2)
+);
 
 const sun = new THREE.DirectionalLight(0xffffff, 2);
 sun.position.set(20, 30, 10);
@@ -35,15 +38,16 @@ scene.add(sun);
 // ===== TANAH =====
 const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(500, 500),
-    new THREE.MeshStandardMaterial({ color: 0x477c42 })
+    new THREE.MeshStandardMaterial({
+        color: 0x477c42
+    })
 );
 
 ground.rotation.x = -Math.PI / 2;
 ground.position.y = -0.1;
 scene.add(ground);
 
-/* ===== JALAN BANDUNG DARI GEOJSON ===== */
-
+// ===== JALAN BANDUNG DARI GEOJSON =====
 function createBandungRoads(roads) {
     const roadMaterial = new THREE.MeshStandardMaterial({
         color: 0x343943,
@@ -78,7 +82,7 @@ function createBandungRoads(roads) {
 
             const dx = end.x - start.x;
             const dz = end.z - start.z;
-            const length = Math.sqrt(dx * dx + dz * dz);
+            const length = Math.hypot(dx, dz);
 
             if (length < 0.1) continue;
 
@@ -89,6 +93,7 @@ function createBandungRoads(roads) {
 
             roadMesh.rotation.x = -Math.PI / 2;
             roadMesh.rotation.z = -Math.atan2(dx, dz);
+
             roadMesh.position.set(
                 (start.x + end.x) / 2,
                 -0.045,
@@ -101,8 +106,8 @@ function createBandungRoads(roads) {
 
     console.log("Jalan 3D Bandung selesai dibuat");
 }
-/* ===== BANGUNAN 3D BRAGA ===== */
 
+/* ===== BANGUNAN 3D BRAGA ===== */
 function createBragaBuildings(buildings) {
     const material = new THREE.MeshStandardMaterial({
         color: 0xc8b9a3,
@@ -114,6 +119,8 @@ function createBragaBuildings(buildings) {
     const metersPerUnit = 10;
 
     for (const feature of buildings) {
+        if (!feature || !feature.geometry) continue;
+
         const geometry = feature.geometry;
         let polygon;
 
@@ -128,9 +135,15 @@ function createBragaBuildings(buildings) {
         if (!polygon || polygon.length < 4) continue;
 
         const points = polygon.map(([lon, lat]) => ({
-            x: (lon - baseLon) * 111320 *
-                Math.cos(baseLat * Math.PI / 180) / metersPerUnit,
-            z: -(lat - baseLat) * 111320 / metersPerUnit
+            x:
+                (lon - baseLon) *
+                111320 *
+                Math.cos(baseLat * Math.PI / 180) /
+                metersPerUnit,
+            z:
+                -(lat - baseLat) *
+                111320 /
+                metersPerUnit
         }));
 
         const minX = Math.min(...points.map(p => p.x));
@@ -175,7 +188,9 @@ character.scale.set(0.7, 0.7, 0.7);
 // Badan
 const body = new THREE.Mesh(
     new THREE.BoxGeometry(0.39, 0.54, 0.21),
-    new THREE.MeshStandardMaterial({ color: 0x2563eb })
+    new THREE.MeshStandardMaterial({
+        color: 0x2563eb
+    })
 );
 body.position.y = 0.72;
 character.add(body);
@@ -183,12 +198,14 @@ character.add(body);
 // Kepala
 const head = new THREE.Mesh(
     new THREE.SphereGeometry(0.15, 16, 16),
-    new THREE.MeshStandardMaterial({ color: 0xf1c27d })
+    new THREE.MeshStandardMaterial({
+        color: 0xf1c27d
+    })
 );
 head.position.y = 1.08;
 character.add(head);
 
-// Kaki kiri dan kanan
+// Kaki
 const legMaterial = new THREE.MeshStandardMaterial({
     color: 0x172554
 });
@@ -204,16 +221,16 @@ const rightLeg = leftLeg.clone();
 rightLeg.position.x = 0.11;
 character.add(rightLeg);
 
-// Tambahkan karakter ke dunia
 scene.add(character);
 
+// ===== VARIABEL KONTROL =====
 let yaw = 0;
 let pitch = 0;
 let joystickX = 0;
 let joystickY = 0;
 let running = false;
 
-/* ===== KAMERA ORANG KETIGA ===== */
+// ===== POSISI AWAL KAMERA =====
 camera.position.set(
     player.x,
     2.2,
@@ -222,15 +239,18 @@ camera.position.set(
 
 camera.rotation.order = "YXZ";
 
-// ===== JOYSTICK =====
+/* ===== JOYSTICK ===== */
 const joystick = document.getElementById("joystick");
 const stick = document.getElementById("stick");
 
 let joystickPointer = null;
 
 joystick.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+
     joystickPointer = event.pointerId;
     joystick.setPointerCapture(event.pointerId);
+
     moveJoystick(event);
 });
 
@@ -253,8 +273,8 @@ function moveJoystick(event) {
     const distance = Math.hypot(dx, dy);
 
     if (distance > maxDistance) {
-        dx = dx / distance * maxDistance;
-        dy = dy / distance * maxDistance;
+        dx = (dx / distance) * maxDistance;
+        dy = (dy / distance) * maxDistance;
     }
 
     joystickX = dx / maxDistance;
@@ -265,30 +285,29 @@ function moveJoystick(event) {
 }
 
 function resetJoystick(event) {
-    if (
-        joystickPointer !== null &&
-        event.pointerId === joystickPointer
-    ) {
-        joystickPointer = null;
-        joystickX = 0;
-        joystickY = 0;
+    if (event.pointerId !== joystickPointer) return;
 
-        stick.style.left = "50%";
-        stick.style.top = "50%";
-    }
+    joystickPointer = null;
+    joystickX = 0;
+    joystickY = 0;
+
+    stick.style.left = "50%";
+    stick.style.top = "50%";
 }
 
 joystick.addEventListener("pointerup", resetJoystick);
 joystick.addEventListener("pointercancel", resetJoystick);
+
 joystick.addEventListener("lostpointercapture", () => {
     joystickPointer = null;
     joystickX = 0;
     joystickY = 0;
+
     stick.style.left = "50%";
     stick.style.top = "50%";
 });
 
-// ===== TOMBOL LARI =====
+/* ===== TOMBOL LARI ===== */
 const runButton = document.getElementById("run-button");
 
 runButton.addEventListener("pointerdown", (event) => {
@@ -304,13 +323,13 @@ runButton.addEventListener("pointerup", stopRunning);
 runButton.addEventListener("pointercancel", stopRunning);
 runButton.addEventListener("lostpointercapture", stopRunning);
 
-// ===== GERAKAN KAMERA =====
-// Geser jari pada sisi kanan layar untuk melihat sekeliling.
+/* ===== GERAKAN KAMERA DENGAN SENTUHAN ===== */
 let lookPointer = null;
 let lastLookX = 0;
 let lastLookY = 0;
 
 renderer.domElement.addEventListener("pointerdown", (event) => {
+    // Bagian kiri layar digunakan untuk joystick.
     if (event.clientX < window.innerWidth * 0.4) return;
 
     lookPointer = event.pointerId;
@@ -320,87 +339,20 @@ renderer.domElement.addEventListener("pointerdown", (event) => {
     renderer.domElement.setPointerCapture(event.pointerId);
 });
 
+renderer.domElement.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== lookPointer) return;
 
-    // ===== KAMERA ORANG KETIGA =====
-    const isLandscape = window.innerWidth > window.innerHeight;
+    const dx = event.clientX - lastLookX;
+    const dy = event.clientY - lastLookY;
 
-    const cameraDistance = isLandscape ? 1.8 : 4;
-    const cameraHeight = isLandscape ? 1.8 : 2.8;
-    const lookDistance = 5;
+    yaw += dx * 0.005;
+    pitch -= dy * 0.005;
 
-    // Batasi sudut pandang atas dan bawah
-    pitch = THREE.MathUtils.clamp(
-        pitch,
-        -0.8,
-        0.8
-    );
+    pitch = THREE.MathUtils.clamp(pitch, -0.8, 0.8);
 
-    // Posisi kamera mengikuti pemain dan sudut vertikal
-    const horizontalDistance =
-        cameraDistance * Math.cos(pitch);
-
-    const targetX =
-        player.x - Math.sin(yaw) * horizontalDistance;
-
-    const targetZ =
-        player.z + Math.cos(yaw) * horizontalDistance;
-
-    const targetY =
-        cameraHeight + Math.sin(pitch) * cameraDistance;
-
-    // Gerakan kamera halus
-    const smoothness = 1 - Math.exp(-6 * delta);
-
-    camera.position.x +=
-        (targetX - camera.position.x) * smoothness;
-
-    camera.position.y +=
-        (targetY - camera.position.y) * smoothness;
-
-    camera.position.z +=
-        (targetZ - camera.position.z) * smoothness;
-
-    // Arahkan pandangan kamera
-    camera.lookAt(
-        player.x + Math.sin(yaw) * Math.cos(pitch) * lookDistance,
-        0.9 + Math.sin(pitch) * lookDistance,
-        player.z - Math.cos(yaw) * Math.cos(pitch) * lookDistance
-    );
-
-    renderer.render(scene, camera);
-}
-
-// ===== UKURAN LAYAR =====
-window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    lastLookX = event.clientX;
+    lastLookY = event.clientY;
 });
-
-animate();
-
-/* ===== MEMUAT JALAN BANDUNG ===== */
-let bandungRoads = [];
-
-loadBandungMap()
-    .then((roads) => {
-        bandungRoads = roads;
-        console.log("Jalan Bandung dimuat:", bandungRoads.length);
-        createBandungRoads(roads);
-    })
-    .catch((error) => {
-        console.error("Gagal memuat jalan Bandung:", error);
-    });
-
-/* ===== MEMUAT BANGUNAN BRAGA ===== */
-loadBragaBuildings()
-    .then((buildings) => {
-        createBragaBuildings(buildings);
-    })
-    .catch((error) => {
-        console.error("Gagal memuat bangunan Braga:", error);
-    });
-
 
 function stopLooking(event) {
     if (event.pointerId === lookPointer) {
@@ -411,17 +363,19 @@ function stopLooking(event) {
 renderer.domElement.addEventListener("pointerup", stopLooking);
 renderer.domElement.addEventListener("pointercancel", stopLooking);
 
-
 /* ===== ANIMASI GAME ===== */
 let previousTime = 0;
 
 function animate(time = 0) {
     requestAnimationFrame(animate);
 
-    const delta = Math.min((time - previousTime) / 1000, 0.05);
+    const delta = Math.min(
+        (time - previousTime) / 1000,
+        0.05
+    );
     previousTime = time;
 
-    // Arah gerakan berdasarkan kamera
+    // Arah gerakan berdasarkan arah kamera
     const forward = -joystickY;
     const sideways = joystickX;
 
@@ -443,30 +397,25 @@ function animate(time = 0) {
     player.x = THREE.MathUtils.clamp(player.x, -40, 40);
     player.z = THREE.MathUtils.clamp(player.z, -90, 90);
 
-    // Pindahkan model karakter mengikuti pemain
+    // Ikuti posisi pemain
     character.position.set(player.x, 0, player.z);
 
-    // Putar karakter ke arah gerakan
+    // Hadapkan karakter ke arah gerakan
     if (Math.abs(moveX) + Math.abs(moveZ) > 0.01) {
         character.rotation.y = Math.atan2(moveX, moveZ);
     }
-    
 
     // ===== KAMERA ORANG KETIGA =====
-    const isLandscape = window.innerWidth > window.innerHeight;
+    const isLandscape =
+        window.innerWidth > window.innerHeight;
 
     const cameraDistance = isLandscape ? 1.8 : 4;
     const cameraHeight = isLandscape ? 1.8 : 2.8;
     const lookDistance = 5;
 
-    // Batasi sudut pandang atas dan bawah
-    pitch = THREE.MathUtils.clamp(
-        pitch,
-        -0.8,
-        0.8
-    );
+    pitch = THREE.MathUtils.clamp(pitch, -0.8, 0.8);
 
-    // Posisi kamera mengikuti pemain dan sudut vertikal
+    // Posisi kamera di belakang pemain
     const horizontalDistance =
         cameraDistance * Math.cos(pitch);
 
@@ -479,7 +428,7 @@ function animate(time = 0) {
     const targetY =
         cameraHeight + Math.sin(pitch) * cameraDistance;
 
-    // Gerakan kamera halus
+    // Haluskan pergerakan kamera
     const smoothness = 1 - Math.exp(-6 * delta);
 
     camera.position.x +=
@@ -491,7 +440,7 @@ function animate(time = 0) {
     camera.position.z +=
         (targetZ - camera.position.z) * smoothness;
 
-    // Arahkan pandangan kamera
+    // Arah pandangan kamera
     camera.lookAt(
         player.x + Math.sin(yaw) * Math.cos(pitch) * lookDistance,
         0.9 + Math.sin(pitch) * lookDistance,
@@ -505,9 +454,14 @@ function animate(time = 0) {
 window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
 });
 
+// Mulai animasi satu kali
 animate();
 
 /* ===== MEMUAT JALAN BANDUNG ===== */
@@ -516,7 +470,7 @@ let bandungRoads = [];
 loadBandungMap()
     .then((roads) => {
         bandungRoads = roads;
-        console.log("Jalan Bandung dimuat:", bandungRoads.length);
+        console.log("Jalan Bandung dimuat:", roads.length);
         createBandungRoads(roads);
     })
     .catch((error) => {
@@ -524,17 +478,6 @@ loadBandungMap()
     });
 
 /* ===== MEMUAT BANGUNAN BRAGA ===== */
-loadBragaBuildings()
-    .then((buildings) => {
-        createBragaBuildings(buildings);
-    })
-    .catch((error) => {
-        console.error("Gagal memuat bangunan Braga:", error);
-    });
-
-
-/* ===== MEMUAT BANGUNAN BRAGA ===== */
-
 loadBragaBuildings()
     .then((buildings) => {
         createBragaBuildings(buildings);
@@ -552,29 +495,21 @@ if (minimap) {
     function drawMinimap() {
         const w = minimap.width;
         const h = minimap.height;
-        const scale = 3;
         const centerX = w / 2;
         const centerY = h / 2;
-
-        const px = player.x;
-        const pz = player.z;
 
         ctx.fillStyle = "#172a35";
         ctx.fillRect(0, 0, w, h);
 
-        // Jalan asli dari GeoJSON Bandung
-        ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.rotate(-character.rotation.y);
-
+        // Pusat peta mengikuti posisi pemain
         const latCenter = -6.915;
 
-const lonCenter =
-    107.605 + player.x / (111320 * Math.cos(latCenter * Math.PI / 180));
+        const lonCenter =
+            107.605 +
+            player.x /
+            (111320 * Math.cos(latCenter * Math.PI / 180));
 
-const latPusat =
-    latCenter + player.z / 111320;
-
+        const latPusat = latCenter + player.z / 111320;
         const zoom = 3;
 
         const lonMin = lonCenter - 0.01 / zoom;
@@ -582,8 +517,10 @@ const latPusat =
         const latMin = latPusat - 0.01 / zoom;
         const latMax = latPusat + 0.01 / zoom;
 
-        const mapWidth = w;
-        const mapHeight = h;
+        // Gambar jalan dari GeoJSON
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(-character.rotation.y);
 
         ctx.strokeStyle = "#cbd5e1";
         ctx.lineWidth = 2;
@@ -591,14 +528,21 @@ const latPusat =
         ctx.lineJoin = "round";
 
         for (const road of bandungRoads) {
+            if (!road || road.length < 2) continue;
+
             ctx.beginPath();
 
             for (let i = 0; i < road.length; i++) {
                 const lon = road[i][0];
                 const lat = road[i][1];
 
-                const x = ((lon - lonMin) / (lonMax - lonMin)) * mapWidth - centerX;
-                const y = ((latMax - lat) / (latMax - latMin)) * mapHeight - centerY;
+                const x =
+                    ((lon - lonMin) / (lonMax - lonMin)) * w -
+                    centerX;
+
+                const y =
+                    ((latMax - lat) / (latMax - latMin)) * h -
+                    centerY;
 
                 if (i === 0) {
                     ctx.moveTo(x, y);
@@ -612,7 +556,7 @@ const latPusat =
 
         ctx.restore();
 
-        // Penanda arah pemain
+        // Penanda pemain
         ctx.save();
         ctx.translate(centerX, centerY);
 
@@ -624,6 +568,7 @@ const latPusat =
 
         ctx.fillStyle = "#38bdf8";
         ctx.fill();
+
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 2;
         ctx.stroke();
