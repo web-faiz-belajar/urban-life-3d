@@ -142,60 +142,113 @@ function createBandungRoads(roads) {
 
 /* ===== BANGUNAN 3D BRAGA ===== */
 function createBragaBuildings(buildings) {
-    const material = new THREE.MeshStandardMaterial({
-        color: 0xc8b9a3,
-        roughness: 0.9
-    });
+    const materials = [
+        new THREE.MeshStandardMaterial({
+            color: 0xc8b9a3,
+            roughness: 0.9
+        }),
+        new THREE.MeshStandardMaterial({
+            color: 0xd8c8ad,
+            roughness: 0.9
+        }),
+        new THREE.MeshStandardMaterial({
+            color: 0xb7a18b,
+            roughness: 0.9
+        }),
+        new THREE.MeshStandardMaterial({
+            color: 0xe0d5c2,
+            roughness: 0.9
+        })
+    ];
+
+    let created = 0;
 
     for (const feature of buildings) {
-        if (!feature || !feature.geometry) continue;
+        if (!feature?.geometry) continue;
 
         const geometry = feature.geometry;
-        let polygon;
+        let polygons = [];
 
         if (geometry.type === "Polygon") {
-            polygon = geometry.coordinates[0];
+            polygons = [geometry.coordinates[0]];
         } else if (geometry.type === "MultiPolygon") {
-            polygon = geometry.coordinates[0][0];
+            polygons = geometry.coordinates.map(
+                polygon => polygon[0]
+            );
         } else {
             continue;
         }
 
-        if (!polygon || polygon.length < 4) continue;
+        for (const polygon of polygons) {
+            if (!polygon || polygon.length < 4) continue;
 
-        const points = polygon.map(([lon, lat]) =>
-            geoToWorld(lon, lat)
-        );
+            const points = polygon.map(([lon, lat]) => {
+                const pos = geoToWorld(lon, lat);
+                return new THREE.Vector2(pos.x, -pos.z);
+            });
 
-        const minX = Math.min(...points.map(p => p.x));
-        const maxX = Math.max(...points.map(p => p.x));
-        const minZ = Math.min(...points.map(p => p.z));
-        const maxZ = Math.max(...points.map(p => p.z));
+            // Hilangkan titik penutup poligon yang berulang
+            if (points.length > 1) {
+                const first = points[0];
+                const last = points[points.length - 1];
 
-        const width = maxX - minX;
-        const depth = maxZ - minZ;
+                if (first.distanceTo(last) < 0.001) {
+                    points.pop();
+                }
+            }
 
-        if (width < 0.5 || depth < 0.5) continue;
+            if (points.length < 3) continue;
 
-        const height = 2 + Math.random() * 3;
+            const shape = new THREE.Shape(points);
 
-        const building = new THREE.Mesh(
-            new THREE.BoxGeometry(width, height, depth),
-            material
-        );
+            const width = Math.max(
+                ...points.map(p => p.x)
+            ) - Math.min(
+                ...points.map(p => p.x)
+            );
 
-        building.position.set(
-            (minX + maxX) / 2,
-            height / 2,
-            (minZ + maxZ) / 2
-        );
+            const depth = Math.max(
+                ...points.map(p => p.y)
+            ) - Math.min(
+                ...points.map(p => p.y)
+            );
 
-        building.castShadow = true;
-        building.receiveShadow = true;
-        scene.add(building);
+            if (width < 0.5 || depth < 0.5) continue;
+            if (width > 100 || depth > 100) continue;
+
+            const height = 2.5 + Math.random() * 2.5;
+
+            const buildingGeometry = new THREE.ExtrudeGeometry(
+                shape,
+                {
+                    depth: height,
+                    bevelEnabled: false,
+                    curveSegments: 1
+                }
+            );
+
+            // ExtrudeGeometry tumbuh ke arah Z lokal.
+            // Putar agar bangunan berdiri tegak pada dunia 3D.
+            buildingGeometry.rotateX(-Math.PI / 2);
+
+            const material =
+                materials[Math.floor(Math.random() * materials.length)];
+
+            const building = new THREE.Mesh(
+                buildingGeometry,
+                material
+            );
+
+            building.position.y = 0;
+            building.castShadow = true;
+            building.receiveShadow = true;
+
+            scene.add(building);
+            created++;
+        }
     }
 
-    console.log("Bangunan 3D Braga selesai dibuat:", buildings.length);
+    console.log("Bangunan Braga dibuat:", created);
 }
 
 /* ===== KARAKTER PEMAIN 3D ===== */
