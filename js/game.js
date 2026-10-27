@@ -3,24 +3,40 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.m
 import { loadBandungMap } from "./bandung-map.js";
 import { loadBragaBuildings } from "./braga-buildings.js";
 
-// ===== PENGATURAN DASAR =====
+/* ===== PENGATURAN DASAR ===== */
 const scene = new THREE.Scene();
+
+// Langit biru dengan kabut atmosfer
 scene.background = new THREE.Color(0x87ceeb);
-scene.fog = new THREE.Fog(0x87ceeb, 25, 120);
+scene.fog = new THREE.Fog(0x87ceeb, 35, 160);
 
 const camera = new THREE.PerspectiveCamera(
     65,
     window.innerWidth / window.innerHeight,
     0.1,
-    200
+    300
 );
 
 const renderer = new THREE.WebGLRenderer({
-    antialias: true
+    antialias: true,
+    powerPreference: "high-performance"
 });
 
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio, 1.5)
+);
+
+// Warna cahaya lebih alami
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+
+// Bayangan
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
