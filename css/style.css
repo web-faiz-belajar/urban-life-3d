@@ -189,9 +189,9 @@ canvas:not(#minimap) {
 
 @media (max-width: 600px) {
     #minimap-container {
-        top: 12px;
-        right: 12px;
-        width: 130px;
+        top: 8px;
+        right: 8px;
+        width: 90px;
     }
 }
 
