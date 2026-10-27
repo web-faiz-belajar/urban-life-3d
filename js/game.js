@@ -33,6 +33,7 @@ scene.add(
 
 const sun = new THREE.DirectionalLight(0xffffff, 2);
 sun.position.set(20, 30, 10);
+sun.castShadow = true;
 scene.add(sun);
 
 // ===== TANAH =====
@@ -45,35 +46,50 @@ const ground = new THREE.Mesh(
 
 ground.rotation.x = -Math.PI / 2;
 ground.position.y = -0.1;
+ground.receiveShadow = true;
 scene.add(ground);
+
+// ===== KONVERSI KOORDINAT BANDUNG =====
+const BASE_LON = 107.605;
+const BASE_LAT = -6.915;
+const METERS_PER_UNIT = 10;
+
+function geoToWorld(lon, lat) {
+    return {
+        x:
+            (lon - BASE_LON) *
+            111320 *
+            Math.cos(BASE_LAT * Math.PI / 180) /
+            METERS_PER_UNIT,
+
+        z:
+            -(lat - BASE_LAT) *
+            111320 /
+            METERS_PER_UNIT
+    };
+}
 
 // ===== JALAN BANDUNG DARI GEOJSON =====
 function createBandungRoads(roads) {
     const roadMaterial = new THREE.MeshStandardMaterial({
         color: 0x343943,
-        roughness: 0.95
+        roughness: 0.95,
+        side: THREE.DoubleSide
     });
 
-    const baseLon = 107.605;
-    const baseLat = -6.915;
-    const metersPerUnit = 10;
-
     for (const road of roads) {
-        if (!road || road.length < 2) continue;
+        if (!Array.isArray(road) || road.length < 2) {
+            continue;
+        }
 
         const points = road.map(([lon, lat]) => {
-            const x =
-                (lon - baseLon) *
-                111320 *
-                Math.cos(baseLat * Math.PI / 180) /
-                metersPerUnit;
+            const pos = geoToWorld(lon, lat);
 
-            const z =
-                -(lat - baseLat) *
-                111320 /
-                metersPerUnit;
-
-            return new THREE.Vector3(x, -0.045, z);
+            return new THREE.Vector3(
+                pos.x,
+                -0.045,
+                pos.z
+            );
         });
 
         for (let i = 0; i < points.length - 1; i++) {
@@ -100,11 +116,12 @@ function createBandungRoads(roads) {
                 (start.z + end.z) / 2
             );
 
+            roadMesh.receiveShadow = true;
             scene.add(roadMesh);
         }
     }
 
-    console.log("Jalan 3D Bandung selesai dibuat");
+    console.log("Jalan Bandung selesai dibuat:", roads.length);
 }
 
 /* ===== BANGUNAN 3D BRAGA ===== */
@@ -113,10 +130,6 @@ function createBragaBuildings(buildings) {
         color: 0xc8b9a3,
         roughness: 0.9
     });
-
-    const baseLon = 107.605;
-    const baseLat = -6.915;
-    const metersPerUnit = 10;
 
     for (const feature of buildings) {
         if (!feature || !feature.geometry) continue;
@@ -134,17 +147,9 @@ function createBragaBuildings(buildings) {
 
         if (!polygon || polygon.length < 4) continue;
 
-        const points = polygon.map(([lon, lat]) => ({
-            x:
-                (lon - baseLon) *
-                111320 *
-                Math.cos(baseLat * Math.PI / 180) /
-                metersPerUnit,
-            z:
-                -(lat - baseLat) *
-                111320 /
-                metersPerUnit
-        }));
+        const points = polygon.map(([lon, lat]) =>
+            geoToWorld(lon, lat)
+        );
 
         const minX = Math.min(...points.map(p => p.x));
         const maxX = Math.max(...points.map(p => p.x));
@@ -169,10 +174,12 @@ function createBragaBuildings(buildings) {
             (minZ + maxZ) / 2
         );
 
+        building.castShadow = true;
+        building.receiveShadow = true;
         scene.add(building);
     }
 
-    console.log("Bangunan 3D Braga selesai dibuat");
+    console.log("Bangunan 3D Braga selesai dibuat:", buildings.length);
 }
 
 /* ===== KARAKTER PEMAIN 3D ===== */
@@ -193,6 +200,7 @@ const body = new THREE.Mesh(
     })
 );
 body.position.y = 0.72;
+body.castShadow = true;
 character.add(body);
 
 // Kepala
@@ -203,6 +211,7 @@ const head = new THREE.Mesh(
     })
 );
 head.position.y = 1.08;
+head.castShadow = true;
 character.add(head);
 
 // Kaki
@@ -215,6 +224,7 @@ const leftLeg = new THREE.Mesh(
     legMaterial
 );
 leftLeg.position.set(-0.11, 0.25, 0);
+leftLeg.castShadow = true;
 character.add(leftLeg);
 
 const rightLeg = leftLeg.clone();
@@ -242,6 +252,12 @@ camera.rotation.order = "YXZ";
 /* ===== JOYSTICK ===== */
 const joystick = document.getElementById("joystick");
 const stick = document.getElementById("stick");
+
+if (!joystick || !stick) {
+    throw new Error(
+        'Elemen joystick atau stick tidak ditemukan di HTML.'
+    );
+}
 
 let joystickPointer = null;
 
@@ -310,6 +326,10 @@ joystick.addEventListener("lostpointercapture", () => {
 /* ===== TOMBOL LARI ===== */
 const runButton = document.getElementById("run-button");
 
+if (!runButton) {
+    throw new Error('Tombol lari #run-button tidak ditemukan di HTML.');
+}
+
 runButton.addEventListener("pointerdown", (event) => {
     event.preventDefault();
     running = true;
@@ -328,8 +348,10 @@ let lookPointer = null;
 let lastLookX = 0;
 let lastLookY = 0;
 
+renderer.domElement.style.touchAction = "none";
+
 renderer.domElement.addEventListener("pointerdown", (event) => {
-    // Bagian kiri layar digunakan untuk joystick.
+    // Sisi kiri layar digunakan untuk joystick.
     if (event.clientX < window.innerWidth * 0.4) return;
 
     lookPointer = event.pointerId;
@@ -370,34 +392,41 @@ function animate(time = 0) {
     requestAnimationFrame(animate);
 
     const delta = Math.min(
-        (time - previousTime) / 1000,
+        Math.max((time - previousTime) / 1000, 0),
         0.05
     );
+
     previousTime = time;
 
     // Arah gerakan berdasarkan arah kamera
     const forward = -joystickY;
     const sideways = joystickX;
 
+    const inputLength = Math.hypot(forward, sideways);
+    const normalizer = inputLength > 1 ? inputLength : 1;
+
+    const forwardNormalized = forward / normalizer;
+    const sidewaysNormalized = sideways / normalizer;
+
     const speed = player.speed * (running ? 1.8 : 1);
 
     const moveX =
-        Math.sin(yaw) * forward +
-        Math.cos(yaw) * sideways;
+        Math.sin(yaw) * forwardNormalized +
+        Math.cos(yaw) * sidewaysNormalized;
 
     const moveZ =
-        -Math.cos(yaw) * forward +
-        Math.sin(yaw) * sideways;
+        -Math.cos(yaw) * forwardNormalized +
+        Math.sin(yaw) * sidewaysNormalized;
 
     // Gerakkan pemain
     player.x += moveX * speed * delta;
     player.z += moveZ * speed * delta;
 
-    // Batasi area permainan
+    // Batas area permainan
     player.x = THREE.MathUtils.clamp(player.x, -40, 40);
     player.z = THREE.MathUtils.clamp(player.z, -90, 90);
 
-    // Ikuti posisi pemain
+    // Posisi karakter
     character.position.set(player.x, 0, player.z);
 
     // Hadapkan karakter ke arah gerakan
@@ -415,7 +444,6 @@ function animate(time = 0) {
 
     pitch = THREE.MathUtils.clamp(pitch, -0.8, 0.8);
 
-    // Posisi kamera di belakang pemain
     const horizontalDistance =
         cameraDistance * Math.cos(pitch);
 
@@ -428,7 +456,7 @@ function animate(time = 0) {
     const targetY =
         cameraHeight + Math.sin(pitch) * cameraDistance;
 
-    // Haluskan pergerakan kamera
+    // Haluskan gerakan kamera
     const smoothness = 1 - Math.exp(-6 * delta);
 
     camera.position.x +=
@@ -469,9 +497,13 @@ let bandungRoads = [];
 
 loadBandungMap()
     .then((roads) => {
+        if (!Array.isArray(roads)) {
+            throw new Error("Format data jalan Bandung tidak valid.");
+        }
+
         bandungRoads = roads;
-        console.log("Jalan Bandung dimuat:", roads.length);
         createBandungRoads(roads);
+        console.log("Jalan Bandung berhasil dimuat:", roads.length);
     })
     .catch((error) => {
         console.error("Gagal memuat jalan Bandung:", error);
@@ -480,13 +512,18 @@ loadBandungMap()
 /* ===== MEMUAT BANGUNAN BRAGA ===== */
 loadBragaBuildings()
     .then((buildings) => {
+        if (!Array.isArray(buildings)) {
+            throw new Error("Format data bangunan Braga tidak valid.");
+        }
+
         createBragaBuildings(buildings);
+        console.log("Bangunan Braga berhasil dimuat:", buildings.length);
     })
     .catch((error) => {
         console.error("Gagal memuat bangunan Braga:", error);
     });
 
-/* ===== MINIMAP BERGERAK ===== */
+/* ===== MINIMAP ===== */
 const minimap = document.getElementById("minimap");
 
 if (minimap) {
@@ -495,21 +532,25 @@ if (minimap) {
     function drawMinimap() {
         const w = minimap.width;
         const h = minimap.height;
+
         const centerX = w / 2;
         const centerY = h / 2;
 
         ctx.fillStyle = "#172a35";
         ctx.fillRect(0, 0, w, h);
 
-        // Pusat peta mengikuti posisi pemain
-        const latCenter = -6.915;
+        // Pusat peta mengikuti posisi pemain.
+        const latCenter = BASE_LAT;
 
         const lonCenter =
-            107.605 +
-            player.x /
+            BASE_LON +
+            (player.x * METERS_PER_UNIT) /
             (111320 * Math.cos(latCenter * Math.PI / 180));
 
-        const latPusat = latCenter + player.z / 111320;
+        const latPusat =
+            latCenter -
+            (player.z * METERS_PER_UNIT) / 111320;
+
         const zoom = 3;
 
         const lonMin = lonCenter - 0.01 / zoom;
@@ -517,7 +558,7 @@ if (minimap) {
         const latMin = latPusat - 0.01 / zoom;
         const latMax = latPusat + 0.01 / zoom;
 
-        // Gambar jalan dari GeoJSON
+        // Gambar jalan GeoJSON.
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.rotate(-character.rotation.y);
@@ -528,13 +569,14 @@ if (minimap) {
         ctx.lineJoin = "round";
 
         for (const road of bandungRoads) {
-            if (!road || road.length < 2) continue;
+            if (!Array.isArray(road) || road.length < 2) {
+                continue;
+            }
 
             ctx.beginPath();
 
             for (let i = 0; i < road.length; i++) {
-                const lon = road[i][0];
-                const lat = road[i][1];
+                const [lon, lat] = road[i];
 
                 const x =
                     ((lon - lonMin) / (lonMax - lonMin)) * w -
@@ -556,7 +598,7 @@ if (minimap) {
 
         ctx.restore();
 
-        // Penanda pemain
+        // Penanda pemain di tengah minimap.
         ctx.save();
         ctx.translate(centerX, centerY);
 
@@ -582,4 +624,6 @@ if (minimap) {
     }
 
     updateMinimap();
+} else {
+    console.warn("Canvas #minimap tidak ditemukan di HTML.");
 }
