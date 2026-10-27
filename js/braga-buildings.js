@@ -1,6 +1,6 @@
 
 export async function loadBragaBuildings() {
-    const response = await fetch("../data/braga.geojson");
+    const response = await fetch("./data/export%20(1)(Copy).geojson");
 
     if (!response.ok) {
         throw new Error("Data bangunan Braga gagal dimuat");
