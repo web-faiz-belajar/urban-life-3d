@@ -408,7 +408,7 @@
         if (inputLength > 0.08) {
             const speed = running ? 10 : 5;
             const forward = -moveY;
-            const strafe = -moveX;
+            const strafe = moveX;
             const dx = (
                   Math.sin(cameraYaw) * forward +
                   Math.cos(cameraYaw) * strafe
