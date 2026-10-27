@@ -389,8 +389,10 @@ function animate(time = 0) {
     }
 
     // Kamera orang ketiga
-    const cameraDistance = 7;
-    const cameraHeight = 3.5;
+    const isLandscape = window.innerWidth > window.innerHeight;
+
+    const cameraDistance = isLandscape ? 4 : 5;
+    const cameraHeight = isLandscape ? 2.5 : 3;
 
     const targetX =
         player.x - Math.sin(yaw) * cameraDistance;
