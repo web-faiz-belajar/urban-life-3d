@@ -397,7 +397,6 @@ loadBandungMap()
     .then((roads) => {
         bandungRoads = roads;
         console.log("Jalan Bandung dimuat:", bandungRoads.length);
-        alert("Jalur jalan Bandung dimuat: " + bandungRoads.length);
     })
     .catch((error) => {
         console.error("Gagal memuat jalan Bandung:", error);
@@ -427,10 +426,15 @@ if (minimap) {
         ctx.translate(centerX, centerY);
         ctx.rotate(-character.rotation.y);
 
-        const lonMin = 107.595;
-        const lonMax = 107.615;
-        const latMin = -6.925;
-        const latMax = -6.905;
+        const lonCenter = 107.605;
+        const latCenter = -6.915;
+
+        const zoom = 3;
+
+        const lonMin = lonCenter - 0.01 / zoom;
+        const lonMax = lonCenter + 0.01 / zoom;
+        const latMin = latCenter - 0.01 / zoom;
+        const latMax = latCenter + 0.01 / zoom;
 
         const mapWidth = w;
         const mapHeight = h;
