@@ -370,8 +370,8 @@ renderer.domElement.addEventListener("pointermove", (event) => {
     yaw += dx * 0.005;
     pitch -= dy * 0.005;
 
-    pitch = THREE.MathUtils.clamp(pitch, -0.8, 0.8);
-
+    pitch = THREE.MathUtils.clamp(pitch, -0.5, 0.5);
+    
     lastLookX = event.clientX;
     lastLookY = event.clientY;
 });
