@@ -440,11 +440,10 @@ function animate(time = 0) {
         window.innerWidth > window.innerHeight;
 
     const cameraDistance = isLandscape ? 1.8 : 4;
-    const cameraHeight = isLandscape ? 1.8 : 2.8;
+    const cameraHeight = isLandscape ? 1.4 : 1.8;
     const lookDistance = 5;
 
-    pitch = THREE.MathUtils.clamp(pitch, -0.8, 0.8);
-
+    pitch = THREE.MathUtils.clamp(pitch, -1.2, 1.2);
     
     // Posisi kamera tetap di belakang karakter
     const horizontalDistance = cameraDistance;
