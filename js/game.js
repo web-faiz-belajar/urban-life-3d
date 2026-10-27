@@ -53,6 +53,77 @@ function createBandungRoads(roads) {
     const baseLon = 107.605;
     const baseLat = -6.915;
     const metersPerUnit = 10;
+    
+/* ===== BANGUNAN 3D BRAGA ===== */
+
+function createBragaBuildings(buildings) {
+    const material = new THREE.MeshStandardMaterial({
+        color: 0xc8b9a3,
+        roughness: 0.9
+    });
+
+    const baseLon = 107.605;
+    const baseLat = -6.915;
+    const metersPerUnit = 10;
+
+    for (const feature of buildings) {
+        const geometry = feature.geometry;
+
+        let polygon;
+
+        if (geometry.type === "Polygon") {
+            polygon = geometry.coordinates[0];
+        } else if (geometry.type === "MultiPolygon") {
+            polygon = geometry.coordinates[0][0];
+        } else {
+            continue;
+        }
+
+        if (!polygon || polygon.length < 4) continue;
+
+        const points = polygon.map(([lon, lat]) => {
+            const x =
+                (lon - baseLon) *
+                111320 *
+                Math.cos(baseLat * Math.PI / 180) /
+                metersPerUnit;
+
+            const z =
+                -(lat - baseLat) *
+                111320 /
+                metersPerUnit;
+
+            return { x, z };
+        });
+
+        const minX = Math.min(...points.map(p => p.x));
+        const maxX = Math.max(...points.map(p => p.x));
+        const minZ = Math.min(...points.map(p => p.z));
+        const maxZ = Math.max(...points.map(p => p.z));
+
+        const width = maxX - minX;
+        const depth = maxZ - minZ;
+
+        if (width < 0.5 || depth < 0.5) continue;
+
+        const height = 2 + Math.random() * 3;
+
+        const building = new THREE.Mesh(
+            new THREE.BoxGeometry(width, height, depth),
+            material
+        );
+
+        building.position.set(
+            (minX + maxX) / 2,
+            height / 2,
+            (minZ + maxZ) / 2
+        );
+
+        scene.add(building);
+    }
+
+    console.log("Bangunan 3D Braga selesai dibuat");
+}
 
     for (const road of roads) {
         if (!road || road.length < 2) continue;
@@ -377,6 +448,16 @@ loadBandungMap()
     })
     .catch((error) => {
         console.error("Gagal memuat jalan Bandung:", error);
+    });
+
+/* ===== MEMUAT BANGUNAN BRAGA ===== */
+
+loadBragaBuildings()
+    .then((buildings) => {
+        createBragaBuildings(buildings);
+    })
+    .catch((error) => {
+        console.error("Gagal memuat bangunan Braga:", error);
     });
 
 /* ===== MINIMAP BERGERAK ===== */
