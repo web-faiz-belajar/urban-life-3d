@@ -426,8 +426,13 @@ if (minimap) {
         ctx.translate(centerX, centerY);
         ctx.rotate(-character.rotation.y);
 
-        const lonCenter = 107.605;
         const latCenter = -6.915;
+
+const lonCenter =
+    107.605 + player.x / (111320 * Math.cos(latCenter * Math.PI / 180));
+
+const latPusat =
+    latCenter - player.z / 111320;
 
         const zoom = 3;
 
