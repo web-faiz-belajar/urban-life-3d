@@ -418,7 +418,7 @@
                   Math.sin(cameraYaw) * strafe
           ) * speed * delta;
 
-            player.position.x += dx;
+            player.position.x -= dx;
             player.position.z += dz;
 
             player.position.x = THREE.MathUtils.clamp(
