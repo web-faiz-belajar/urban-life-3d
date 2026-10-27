@@ -434,15 +434,16 @@ function animate(time = 0) {
         character.rotation.y = Math.atan2(moveX, moveZ);
     }
 
+
     // ===== KAMERA ORANG KETIGA =====
     const isLandscape =
         window.innerWidth > window.innerHeight;
 
-    const cameraDistance = isLandscape ? 3.5 : 4.5;
-    const cameraHeight = isLandscape ? 2.2 : 2.8;
+    const cameraDistance = isLandscape ? 1.8 : 4;
+    const cameraHeight = isLandscape ? 1.8 : 2.8;
+    const lookDistance = 5;
 
-    // Batasi sudut kamera vertikal
-    pitch = THREE.MathUtils.clamp(pitch, -0.35, 0.55);
+    pitch = THREE.MathUtils.clamp(pitch, -0.8, 0.8);
 
     const horizontalDistance =
         cameraDistance * Math.cos(pitch);
@@ -468,21 +469,15 @@ function animate(time = 0) {
     camera.position.z +=
         (targetZ - camera.position.z) * smoothness;
 
-    // Arahkan kamera ke karakter
-    const lookTargetX =
-        player.x + Math.sin(yaw) * 2;
-
-    const lookTargetY =
-        1.0 + Math.sin(pitch) * 1.5;
-
-    const lookTargetZ =
-        player.z - Math.cos(yaw) * 2;
-
+    // Arah pandangan kamera
     camera.lookAt(
-        lookTargetX,
-        lookTargetY,
-        lookTargetZ
+        player.x + Math.sin(yaw) * Math.cos(pitch) * lookDistance,
+        0.9 + Math.sin(pitch) * lookDistance,
+        player.z - Math.cos(yaw) * Math.cos(pitch) * lookDistance
     );
+
+    renderer.render(scene, camera);
+}
 
 // ===== UKURAN LAYAR =====
 window.addEventListener("resize", () => {
