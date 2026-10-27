@@ -334,9 +334,9 @@
         previousX = event.clientX;
         previousY = event.clientY;
 
-        cameraYaw -= dx * 0.006;
-        cameraPitch = Math.max(-0.05,
-            Math.min(0.65, cameraPitch - dy * 0.003));
+        cameraYaw += dx * 0.006;
+    cameraPitch = Math.max(-0.05,
+    Math.min(0.65, cameraPitch + dy * 0.003));
     });
 
     function endLook(event) {
