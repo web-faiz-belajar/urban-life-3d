@@ -388,34 +388,36 @@ function animate(time = 0) {
         character.rotation.y = Math.atan2(moveX, moveZ);
     }
 
-    // Kamera orang ketiga
-    const isLandscape = window.innerWidth > window.innerHeight;
-
-    const cameraDistance = isLandscape ? 3 : 4;
+    // Kamera orang ketiga: bisa berputar atas-bawah
+    const cameraDistance = isLandscape ? 1.8 : 4;
     const cameraHeight = isLandscape ? 1.8 : 2.8;
 
+    const horizontalDistance =
+        cameraDistance * Math.cos(pitch);
+
     const targetX =
-        player.x - Math.sin(yaw) * cameraDistance;
+        player.x - Math.sin(yaw) * horizontalDistance;
 
     const targetZ =
-        player.z + Math.cos(yaw) * cameraDistance;
+        player.z + Math.cos(yaw) * horizontalDistance;
 
-    // Haluskan pergerakan kamera
+    const targetY =
+        cameraHeight + Math.sin(pitch) * cameraDistance;
+
     const smoothness = 1 - Math.exp(-6 * delta);
 
     camera.position.x +=
         (targetX - camera.position.x) * smoothness;
 
     camera.position.y +=
-        (cameraHeight - camera.position.y) * smoothness;
+        (targetY - camera.position.y) * smoothness;
 
     camera.position.z +=
         (targetZ - camera.position.z) * smoothness;
 
-    // Kamera melihat ke arah karakter
-    const lookDistance = 5;
+    // Pandangan selalu diarahkan ke pemain
+    camera.lookAt(player.x, 0.9, player.z);
 
-camera.lookAt(
     player.x + Math.sin(yaw) * Math.cos(pitch) * lookDistance,
     0.9 + Math.sin(pitch) * lookDistance,
     player.z - Math.cos(yaw) * Math.cos(pitch) * lookDistance
