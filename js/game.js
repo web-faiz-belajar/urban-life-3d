@@ -407,17 +407,16 @@
         const inputLength = Math.hypot(moveX, moveY);
         if (inputLength > 0.08) {
             const speed = running ? 10 : 5;
-            const forward = moveY;
+            const forward = -moveY;
             const strafe = moveX;
             const dx = (
-                Math.sin(cameraYaw) * forward +
-                Math.cos(cameraYaw) * strafe
-            ) * speed * delta;
-
-            const dz = (
-                Math.cos(cameraYaw) * forward -
-                Math.sin(cameraYaw) * strafe
-            ) * speed * delta;
+                  Math.sin(cameraYaw) * forward +
+                  Math.cos(cameraYaw) * strafe
+           ) * speed * delta;
+           const dz = (
+                 -Math.cos(cameraYaw) * forward +
+                  Math.sin(cameraYaw) * strafe
+          ) * speed * delta;
 
             player.position.x += dx;
             player.position.z += dz;
