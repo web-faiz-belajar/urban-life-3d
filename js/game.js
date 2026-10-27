@@ -226,6 +226,7 @@ function createBragaBuildings(buildings) {
             const material =
                 materials[Math.floor(Math.random() * materials.length)];
 
+            
             const building = new THREE.Mesh(
                 buildingGeometry,
                 material
@@ -236,6 +237,71 @@ function createBragaBuildings(buildings) {
             building.receiveShadow = true;
 
             scene.add(building);
+
+            // ===== DETAIL FASAD: PINTU DAN JENDELA =====
+            const minX = Math.min(...points.map(p => p.x));
+            const maxX = Math.max(...points.map(p => p.x));
+            const minY = Math.min(...points.map(p => p.y));
+            const maxY = Math.max(...points.map(p => p.y));
+
+            const width = maxX - minX;
+            const depth = maxY - minY;
+
+            // Tambahkan detail hanya pada bangunan yang cukup besar
+            if (width > 2 && depth > 2) {
+                const facadeZ = -minY;
+
+                const doorMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x49352b,
+                    roughness: 0.8
+                });
+
+                const windowMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x263c50,
+                    metalness: 0.15,
+                    roughness: 0.25
+                });
+
+                const door = new THREE.Mesh(
+                    new THREE.BoxGeometry(
+                        Math.min(0.9, width * 0.2),
+                        1.6,
+                        0.08
+                    ),
+                    doorMaterial
+                );
+
+                door.position.set(
+                    (minX + maxX) / 2,
+                    0.8,
+                    facadeZ - 0.05
+                );
+
+                scene.add(door);
+
+                const windowWidth = Math.min(0.8, width * 0.18);
+
+                for (const side of [-1, 1]) {
+                    const windowMesh = new THREE.Mesh(
+                        new THREE.BoxGeometry(
+                            windowWidth,
+                            0.7,
+                            0.08
+                        ),
+                        windowMaterial
+                    );
+
+                    windowMesh.position.set(
+                        (minX + maxX) / 2 +
+                            side * width * 0.27,
+                        2.0,
+                        facadeZ - 0.06
+                    );
+
+                    scene.add(windowMesh);
+                }
+            }
+
             created++;
         }
     }
