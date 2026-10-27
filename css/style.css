@@ -29,13 +29,10 @@ canvas:not(#minimap) {
     height: 100%;
 }
 
-
 #minimap {
     width: 120px;
     height: 120px;
     aspect-ratio: 1 / 1;
-}
-
 }
 
 #hud {
