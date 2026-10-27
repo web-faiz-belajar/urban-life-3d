@@ -33,13 +33,73 @@ scene.add(sun);
 
 // ===== TANAH =====
 const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(200, 200),
+    new THREE.PlaneGeometry(500, 500),
     new THREE.MeshStandardMaterial({ color: 0x477c42 })
 );
 
 ground.rotation.x = -Math.PI / 2;
 ground.position.y = -0.1;
 scene.add(ground);
+
+/* ===== JALAN BANDUNG DARI GEOJSON ===== */
+
+function createBandungRoads(roads) {
+    const roadMaterial = new THREE.MeshStandardMaterial({
+        color: 0x343943,
+        roughness: 0.95
+    });
+
+    const baseLon = 107.605;
+    const baseLat = -6.915;
+    const metersPerUnit = 10;
+
+    for (const road of roads) {
+        if (!road || road.length < 2) continue;
+
+        const points = road.map(([lon, lat]) => {
+            const x =
+                (lon - baseLon) *
+                111320 *
+                Math.cos(baseLat * Math.PI / 180) /
+                metersPerUnit;
+
+            const z =
+                -(lat - baseLat) *
+                111320 /
+                metersPerUnit;
+
+            return new THREE.Vector3(x, -0.045, z);
+        });
+
+        for (let i = 0; i < points.length - 1; i++) {
+            const start = points[i];
+            const end = points[i + 1];
+
+            const dx = end.x - start.x;
+            const dz = end.z - start.z;
+            const length = Math.sqrt(dx * dx + dz * dz);
+
+            if (length < 0.1) continue;
+
+            const roadMesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(4, length),
+                roadMaterial
+            );
+
+            roadMesh.rotation.x = -Math.PI / 2;
+            roadMesh.rotation.z = -Math.atan2(dx, dz);
+            roadMesh.position.set(
+                (start.x + end.x) / 2,
+                -0.045,
+                (start.z + end.z) / 2
+            );
+
+            scene.add(roadMesh);
+        }
+    }
+
+    console.log("Jalan 3D Bandung selesai dibuat");
+}
 
 /* ===== KARAKTER PEMAIN 3D ===== */
 const player = {
@@ -311,6 +371,8 @@ loadBandungMap()
     .then((roads) => {
         bandungRoads = roads;
         console.log("Jalan Bandung dimuat:", bandungRoads.length);
+
+        createBandungRoads(roads);
     })
     .catch((error) => {
         console.error("Gagal memuat jalan Bandung:", error);
