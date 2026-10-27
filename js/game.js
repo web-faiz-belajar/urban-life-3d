@@ -143,22 +143,14 @@ function createBandungRoads(roads) {
 /* ===== BANGUNAN 3D BRAGA ===== */
 function createBragaBuildings(buildings) {
     const materials = [
-        new THREE.MeshStandardMaterial({
-            color: 0xc8b9a3,
-            roughness: 0.9
-        }),
-        new THREE.MeshStandardMaterial({
-            color: 0xd8c8ad,
-            roughness: 0.9
-        }),
-        new THREE.MeshStandardMaterial({
-            color: 0xb7a18b,
-            roughness: 0.9
-        }),
-        new THREE.MeshStandardMaterial({
-            color: 0xe0d5c2,
-            roughness: 0.9
-        })
+        new THREE.MeshStandardMaterial({ color: 0xe8d5b7, roughness: 0.9 }), // Krem
+        new THREE.MeshStandardMaterial({ color: 0xc97955, roughness: 0.9 }), // Bata
+        new THREE.MeshStandardMaterial({ color: 0xd6b76c, roughness: 0.9 }), // Kuning
+        new THREE.MeshStandardMaterial({ color: 0xb7c9b0, roughness: 0.9 }), // Hijau
+        new THREE.MeshStandardMaterial({ color: 0xc6d5e3, roughness: 0.9 }), // Biru
+        new THREE.MeshStandardMaterial({ color: 0xd8c8c0, roughness: 0.9 }), // Merah muda
+        new THREE.MeshStandardMaterial({ color: 0xf0e8d8, roughness: 0.9 }), // Putih gading
+        new THREE.MeshStandardMaterial({ color: 0x9d7864, roughness: 0.9 })  // Cokelat
     ];
 
     let created = 0;
