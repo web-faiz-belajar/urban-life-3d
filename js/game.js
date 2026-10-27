@@ -438,8 +438,8 @@ const latPusat =
 
         const lonMin = lonCenter - 0.01 / zoom;
         const lonMax = lonCenter + 0.01 / zoom;
-        const latMin = latCenter - 0.01 / zoom;
-        const latMax = latCenter + 0.01 / zoom;
+        const latMin = latPusat - 0.01 / zoom;
+        const latMax = latPusat + 0.01 / zoom;
 
         const mapWidth = w;
         const mapHeight = h;
