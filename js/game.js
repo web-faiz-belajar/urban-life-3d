@@ -320,24 +320,87 @@ renderer.domElement.addEventListener("pointerdown", (event) => {
     renderer.domElement.setPointerCapture(event.pointerId);
 });
 
-renderer.domElement.addEventListener("pointermove", (event) => {
-    if (event.pointerId !== lookPointer) return;
 
-    const dx = event.clientX - lastLookX;
-    const dy = event.clientY - lastLookY;
+    // ===== KAMERA ORANG KETIGA =====
+    const isLandscape = window.innerWidth > window.innerHeight;
 
-    yaw += dx * 0.005;
-    pitch -= dy * 0.005;
+    const cameraDistance = isLandscape ? 1.8 : 4;
+    const cameraHeight = isLandscape ? 1.8 : 2.8;
+    const lookDistance = 5;
 
+    // Batasi sudut pandang atas dan bawah
     pitch = THREE.MathUtils.clamp(
         pitch,
-        -Math.PI / 2.5,
-        Math.PI / 2.5
+        -0.8,
+        0.8
     );
 
-    lastLookX = event.clientX;
-    lastLookY = event.clientY;
+    // Posisi kamera mengikuti pemain dan sudut vertikal
+    const horizontalDistance =
+        cameraDistance * Math.cos(pitch);
+
+    const targetX =
+        player.x - Math.sin(yaw) * horizontalDistance;
+
+    const targetZ =
+        player.z + Math.cos(yaw) * horizontalDistance;
+
+    const targetY =
+        cameraHeight + Math.sin(pitch) * cameraDistance;
+
+    // Gerakan kamera halus
+    const smoothness = 1 - Math.exp(-6 * delta);
+
+    camera.position.x +=
+        (targetX - camera.position.x) * smoothness;
+
+    camera.position.y +=
+        (targetY - camera.position.y) * smoothness;
+
+    camera.position.z +=
+        (targetZ - camera.position.z) * smoothness;
+
+    // Arahkan pandangan kamera
+    camera.lookAt(
+        player.x + Math.sin(yaw) * Math.cos(pitch) * lookDistance,
+        0.9 + Math.sin(pitch) * lookDistance,
+        player.z - Math.cos(yaw) * Math.cos(pitch) * lookDistance
+    );
+
+    renderer.render(scene, camera);
+}
+
+// ===== UKURAN LAYAR =====
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+animate();
+
+/* ===== MEMUAT JALAN BANDUNG ===== */
+let bandungRoads = [];
+
+loadBandungMap()
+    .then((roads) => {
+        bandungRoads = roads;
+        console.log("Jalan Bandung dimuat:", bandungRoads.length);
+        createBandungRoads(roads);
+    })
+    .catch((error) => {
+        console.error("Gagal memuat jalan Bandung:", error);
+    });
+
+/* ===== MEMUAT BANGUNAN BRAGA ===== */
+loadBragaBuildings()
+    .then((buildings) => {
+        createBragaBuildings(buildings);
+    })
+    .catch((error) => {
+        console.error("Gagal memuat bangunan Braga:", error);
+    });
+
 
 function stopLooking(event) {
     if (event.pointerId === lookPointer) {
@@ -388,42 +451,60 @@ function animate(time = 0) {
         character.rotation.y = Math.atan2(moveX, moveZ);
     }
     
-    // Kamera orang ketiga
+
+    // ===== KAMERA ORANG KETIGA =====
     const isLandscape = window.innerWidth > window.innerHeight;
 
     const cameraDistance = isLandscape ? 1.8 : 4;
     const cameraHeight = isLandscape ? 1.8 : 2.8;
+    const lookDistance = 5;
+
+    // Batasi sudut pandang atas dan bawah
+    pitch = THREE.MathUtils.clamp(
+        pitch,
+        -0.8,
+        0.8
+    );
+
+    // Posisi kamera mengikuti pemain dan sudut vertikal
+    const horizontalDistance =
+        cameraDistance * Math.cos(pitch);
 
     const targetX =
-        player.x - Math.sin(yaw) * cameraDistance;
+        player.x - Math.sin(yaw) * horizontalDistance;
 
     const targetZ =
-        player.z + Math.cos(yaw) * cameraDistance;
+        player.z + Math.cos(yaw) * horizontalDistance;
 
+    const targetY =
+        cameraHeight + Math.sin(pitch) * cameraDistance;
+
+    // Gerakan kamera halus
     const smoothness = 1 - Math.exp(-6 * delta);
 
     camera.position.x +=
         (targetX - camera.position.x) * smoothness;
 
     camera.position.y +=
-        (cameraHeight - camera.position.y) * smoothness;
+        (targetY - camera.position.y) * smoothness;
 
     camera.position.z +=
         (targetZ - camera.position.z) * smoothness;
 
-    camera.lookAt(player.x, 0.9, player.z);
+    // Arahkan pandangan kamera
+    camera.lookAt(
+        player.x + Math.sin(yaw) * Math.cos(pitch) * lookDistance,
+        0.9 + Math.sin(pitch) * lookDistance,
+        player.z - Math.cos(yaw) * Math.cos(pitch) * lookDistance
+    );
 
-    player.x + Math.sin(yaw) * Math.cos(pitch) * lookDistance,
-    0.9 + Math.sin(pitch) * lookDistance,
-    player.z - Math.cos(yaw) * Math.cos(pitch) * lookDistance
-);
     renderer.render(scene, camera);
 }
 
+// ===== UKURAN LAYAR =====
 window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
@@ -436,12 +517,21 @@ loadBandungMap()
     .then((roads) => {
         bandungRoads = roads;
         console.log("Jalan Bandung dimuat:", bandungRoads.length);
-
         createBandungRoads(roads);
     })
     .catch((error) => {
         console.error("Gagal memuat jalan Bandung:", error);
     });
+
+/* ===== MEMUAT BANGUNAN BRAGA ===== */
+loadBragaBuildings()
+    .then((buildings) => {
+        createBragaBuildings(buildings);
+    })
+    .catch((error) => {
+        console.error("Gagal memuat bangunan Braga:", error);
+    });
+
 
 /* ===== MEMUAT BANGUNAN BRAGA ===== */
 
