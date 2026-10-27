@@ -163,7 +163,6 @@ function createBragaBuildings(buildings) {
 }
 
 /* ===== KARAKTER PEMAIN 3D ===== */
-character.scale.set(0.7, 0.7, 0.7);
 const player = {
     x: 0,
     z: 5,
@@ -171,6 +170,7 @@ const player = {
 };
 
 const character = new THREE.Group();
+character.scale.set(0.7, 0.7, 0.7);
 
 // Badan
 const body = new THREE.Mesh(
