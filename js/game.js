@@ -255,39 +255,144 @@
         makeTree(x + 1, z + 8.5, 0.8);
     }
 
-    // ---------- PLAYER CHARACTER ----------
+
+    // ---------- PLAYER CHARACTER: LOW-POLY HUMAN ----------
     const player = new THREE.Group();
     scene.add(player);
 
     const body = new THREE.Group();
     player.add(body);
 
-    box(body, 0, 1.25, 0, 0.85, 0.9, 0.48, M.shirt);
-    sphere(body, 0, 1.95, 0, 0.31, M.skin);
+    // Materials for a more detailed character
+    const skinMat = new THREE.MeshStandardMaterial({
+        color: 0xb97853,
+        roughness: 0.92,
+        flatShading: true
+    });
 
-    // Hair
-    sphere(body, 0, 2.12, -0.015, 0.31, M.dark);
+    const hairMat = new THREE.MeshStandardMaterial({
+        color: 0x211b1b,
+        roughness: 1,
+        flatShading: true
+    });
 
-    // Legs
-    const leftLeg = box(
-        body, -0.22, 0.55, 0, 0.27, 0.65, 0.3, M.pants
+    const jacketMat = new THREE.MeshStandardMaterial({
+        color: 0x263d59,
+        roughness: 0.88,
+        flatShading: true
+    });
+
+    const jacketLightMat = material(0x456580);
+    const pantsMat = new THREE.MeshStandardMaterial({
+        color: 0x242a35,
+        roughness: 1,
+        flatShading: true
+    });
+
+    const shoeMat = material(0x17191f);
+    const soleMat = material(0xc2b9a6);
+    const shirtMat = material(0xe1d9c9);
+    const eyeMat = material(0x201a18);
+
+    function capsulePart(parent, x, y, z, radius, length, mat) {
+        const mesh = new THREE.Mesh(
+            new THREE.CapsuleGeometry(radius, length, 3, 6),
+            mat
+        );
+        mesh.position.set(x, y, z);
+        parent.add(mesh);
+        return mesh;
+    }
+
+    // Torso and inner shirt
+    box(body, 0, 1.28, 0, 0.72, 0.78, 0.38, jacketMat);
+    box(body, 0, 1.31, 0.205, 0.28, 0.58, 0.035, shirtMat);
+
+    // Jacket collar
+    box(body, 0, 1.69, 0.02, 0.42, 0.12, 0.35, jacketLightMat);
+
+    // Neck
+    capsulePart(body, 0, 1.79, 0, 0.105, 0.12, skinMat);
+
+    // Low-poly head
+    const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.27, 8, 6),
+        skinMat
     );
-    const rightLeg = box(
-        body, 0.22, 0.55, 0, 0.27, 0.65, 0.3, M.pants
-    );
+    head.scale.set(0.88, 1.12, 0.9);
+    head.position.set(0, 2.02, 0);
+    body.add(head);
 
-    box(body, -0.22, 0.18, 0.07, 0.3, 0.18, 0.43, M.shoe);
-    box(body, 0.22, 0.18, 0.07, 0.3, 0.18, 0.43, M.shoe);
-
-    // Arms
-    const leftArm = box(
-        body, -0.55, 1.25, 0, 0.23, 0.75, 0.25, M.shirt
+    // Hair cap and side hair
+    const hair = new THREE.Mesh(
+        new THREE.SphereGeometry(0.275, 8, 5, 0, Math.PI * 2, 0, Math.PI * 0.58),
+        hairMat
     );
-    const rightArm = box(
-        body, 0.55, 1.25, 0, 0.23, 0.75, 0.25, M.shirt
-    );
+    hair.position.set(0, 2.09, -0.015);
+    body.add(hair);
 
+    capsulePart(body, -0.235, 2.00, 0, 0.065, 0.17, hairMat);
+    capsulePart(body, 0.235, 2.00, 0, 0.065, 0.17, hairMat);
+
+    // Face details: eyes sit on the front (+Z)
+    sphere(body, -0.085, 2.035, 0.229, 0.025, eyeMat);
+    sphere(body, 0.085, 2.035, 0.229, 0.025, eyeMat);
+
+    // Nose
+    const nose = new THREE.Mesh(
+        new THREE.ConeGeometry(0.045, 0.11, 5),
+        skinMat
+    );
+    nose.rotation.x = Math.PI / 2;
+    nose.position.set(0, 1.99, 0.27);
+    body.add(nose);
+
+    // Articulated legs
+    const leftLegPivot = new THREE.Group();
+    leftLegPivot.position.set(-0.19, 0.91, 0);
+    body.add(leftLegPivot);
+
+    capsulePart(leftLegPivot, 0, -0.30, 0, 0.125, 0.38, pantsMat);
+
+    box(leftLegPivot, 0, -0.62, 0.065, 0.23, 0.12, 0.39, shoeMat);
+    box(leftLegPivot, 0, -0.682, 0.09, 0.235, 0.035, 0.40, soleMat);
+
+    const rightLegPivot = new THREE.Group();
+    rightLegPivot.position.set(0.19, 0.91, 0);
+    body.add(rightLegPivot);
+
+    capsulePart(rightLegPivot, 0, -0.30, 0, 0.125, 0.38, pantsMat);
+
+    box(rightLegPivot, 0, -0.62, 0.065, 0.23, 0.12, 0.39, shoeMat);
+    box(rightLegPivot, 0, -0.682, 0.09, 0.235, 0.035, 0.40, soleMat);
+
+    // Arms pivot at the shoulders
+    const leftArmPivot = new THREE.Group();
+    leftArmPivot.position.set(-0.43, 1.59, 0);
+    body.add(leftArmPivot);
+
+    capsulePart(leftArmPivot, 0, -0.29, 0, 0.105, 0.37, jacketMat);
+    capsulePart(leftArmPivot, 0, -0.59, 0.015, 0.085, 0.23, skinMat);
+
+    const rightArmPivot = new THREE.Group();
+    rightArmPivot.position.set(0.43, 1.59, 0);
+    body.add(rightArmPivot);
+
+    capsulePart(rightArmPivot, 0, -0.29, 0, 0.105, 0.37, jacketMat);
+    capsulePart(rightArmPivot, 0, -0.59, 0.015, 0.085, 0.23, skinMat);
+
+    // Small jacket pockets
+    box(body, -0.19, 1.34, 0.215, 0.13, 0.14, 0.025, jacketLightMat);
+    box(body, 0.19, 1.34, 0.215, 0.13, 0.14, 0.025, jacketLightMat);
+
+    // Player position
     player.position.set(0, 0, -3);
+
+    // Animation references used by the game loop
+    const leftLeg = leftLegPivot;
+    const rightLeg = rightLegPivot;
+    const leftArm = leftArmPivot;
+    const rightArm = rightArmPivot;
 
     // ---------- CAMERA & INPUT ----------
     let cameraYaw = 0;
