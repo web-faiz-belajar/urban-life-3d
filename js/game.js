@@ -368,7 +368,7 @@ renderer.domElement.addEventListener("pointermove", (event) => {
     const dy = event.clientY - lastLookY;
 
     yaw += dx * 0.005;
-    pitch -= dy * 0.002;
+    pitch -= dy * 0.004;
 
     pitch = THREE.MathUtils.clamp(pitch, -0.5, 0.5);
     
@@ -443,7 +443,7 @@ function animate(time = 0) {
     const cameraHeight = isLandscape ? 0.9 : 1.2;
     const lookDistance = 5;
 
-    pitch = THREE.MathUtils.clamp(pitch, -1.45, 1.45);
+    pitch = THREE.MathUtils.clamp(pitch, -1.60, 1.60);
     
     // Posisi kamera tetap di belakang karakter
     const horizontalDistance = cameraDistance;
