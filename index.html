@@ -4,35 +4,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <meta name="theme-color" content="#020617">
-    <title>Urban Life 3D</title>
+          content="width=device-width, initial-scale=1.0,
+                   maximum-scale=1.0, user-scalable=no">
+
+    <meta name="theme-color" content="#101827">
+    <title>Urban Life 3D — Bandung</title>
+
     <link rel="stylesheet" href="css/style.css">
-    <meta name="screen-orientation" content="landscape">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-    <div id="hud">
-        <div id="game-title">URBAN LIFE <span>3D</span></div>
-        <div id="money">$ 500</div>
-        <div id="hint">Jelajahi kota</div>
+    <div id="loading-screen">
+        <div class="loading-title">URBAN LIFE 3D</div>
+        <div>Bandung • Open City</div>
+        <div id="loading-status">Menyiapkan kota...</div>
     </div>
 
-    <div id="joystick">
-        <div id="stick"></div>
+    <div id="game-container"></div>
+
+    <header id="game-header">
+        <div class="brand">
+            <strong>URBAN LIFE</strong>
+            <span>BANDUNG DISTRICT</span>
+        </div>
+        <div id="game-status">MENJELAJAH</div>
+    </header>
+
+    <div id="location-label">
+        <span class="location-dot"></span>
+        <span id="location-name">Kawasan Braga</span>
     </div>
 
-    <button id="run-button">LARI</button>
+    <div id="minimap">
+        <canvas id="minimap-canvas" width="180" height="180"></canvas>
+        <span class="map-caption">PETA KOTA</span>
+    </div>
 
+    <div id="controls">
+        <div id="joystick">
+            <div id="stick"></div>
+        </div>
 
-<div id="crosshair">+</div>
+        <button id="run-button" type="button">
+            <span>RUN</span>
+        </button>
+    </div>
 
-<!-- MINIMAP -->
-<div id="minimap-container">
-    <div id="minimap-label">BANDUNG</div>
-    <canvas id="minimap" width="240" height="240"></canvas>
-</div>
+    <div id="look-hint">Geser layar untuk melihat sekitar</div>
 
-<script type="module" src="js/game.js"></script>
-
+    <script src="js/game.js"></script>
 </body>
 </html>
