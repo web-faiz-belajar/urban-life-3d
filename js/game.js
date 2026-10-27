@@ -8,7 +8,7 @@ scene.background = new THREE.Color(0x87ceeb);
 scene.fog = new THREE.Fog(0x87ceeb, 25, 120);
 
 const camera = new THREE.PerspectiveCamera(
-    75,
+    65,
     window.innerWidth / window.innerHeight,
     0.1,
     200
@@ -391,8 +391,8 @@ function animate(time = 0) {
     // Kamera orang ketiga
     const isLandscape = window.innerWidth > window.innerHeight;
 
-    const cameraDistance = isLandscape ? 4 : 5;
-    const cameraHeight = isLandscape ? 2.5 : 3;
+    const cameraDistance = isLandscape ? 3 : 4;
+    const cameraHeight = isLandscape ? 2.2 : 2.8;
 
     const targetX =
         player.x - Math.sin(yaw) * cameraDistance;
