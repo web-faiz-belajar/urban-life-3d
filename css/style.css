@@ -159,7 +159,7 @@ canvas:not(#minimap) {
     position: fixed;
     top: 18px;
     right: 18px;
-    width: 180px;
+    width: 100px;
     padding: 5px;
     background: rgba(2, 6, 23, 0.9);
     border: 2px solid #38bdf8;
